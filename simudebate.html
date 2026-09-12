@@ -123,7 +123,8 @@
                         <span>هزینه تقریبی: <span id="logCost" class="text-green-400">$0.0000</span></span>
                     </div>
                     
-                    <div id="chatHistory" class="flex-1 overflow-y-auto space-y-3 pr-2 scrollbar-thin rounded-xl p-2 bg-black/20 border border-white/5">
+                    <!-- Fix: Added min-h-[350px] xl:min-h-[450px] to ensure the chat box doesn't shrink and messages remain visible -->
+                    <div id="chatHistory" class="flex-1 min-h-[350px] xl:min-h-[450px] overflow-y-auto space-y-3 pr-2 scrollbar-thin rounded-xl p-2 bg-black/20 border border-white/5">
                         <div class="text-center text-white/40 text-xs py-10">تاریخچه مناظره هنوز خالی است.</div>
                     </div>
 
@@ -905,7 +906,6 @@
             }
         }
 
-        // FIX 1: Added safeX to route characters around tables/shelves.
         const ROOMS = {
             computer: { cx: -10, cz: -8.375, top: true, bounds: { x: [-13, -7], z: [-11.8, -6.2] }, safeX: [-12.2, -7.8] },
             meeting:  { cx: 0,   cz: -8.375, top: true, bounds: { x: [-4, 4],   z: [-11.8, -6.2] }, safeX: [-3.2, 3.2] },
