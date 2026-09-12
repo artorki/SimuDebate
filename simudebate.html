@@ -1,0 +1,1180 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SimuDebate | artorki</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;600;800&display=swap');
+        
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            font-family: 'Vazirmatn', sans-serif;
+            background-color: #12131c; 
+        }
+
+        #canvas-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        #side-panel {
+            position: absolute;
+            top: 0;
+            right: -450px;
+            width: 100%;
+            max-width: 420px;
+            height: 100%;
+            background: rgba(20, 20, 30, 0.85);
+            backdrop-filter: blur(100px);
+            -webkit-backdrop-filter: blur(100px);
+            border-left: 1px solid rgba(255, 255, 255, 0.1);
+            z-index: 10;
+            transition: right 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
+            box-shadow: -30px 0 60px rgba(0, 0, 0, 0.6);
+            display: flex;
+            flex-direction: column;
+        }
+
+        #side-panel.open { right: 0; }
+
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.15); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.3); }
+
+        .form-input {
+            width: 100%;
+            background-color: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 0.75rem;
+            padding: 0.5rem 0.75rem;
+            font-size: 0.875rem;
+            color: white;
+            outline: none;
+            transition: all 0.3s;
+        }
+        .form-input:focus { border-color: #6366f1; box-shadow: 0 0 10px rgba(99, 102, 241, 0.2); }
+        
+        .form-input option {
+            background-color: #12131c; 
+            color: #ffffff;
+        }
+    </style>
+</head>
+<body class="text-white selection:bg-indigo-500/30">
+
+    <div id="canvas-container"></div>
+
+    <div id="side-panel" class="text-right p-8">
+        <div class="flex justify-between items-center mb-8 pt-4">
+            <button id="close-btn" class="w-11 h-11 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center transition-all hover:scale-105 hover:rotate-90">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </button>
+            <div class="flex items-center gap-4">
+                <div class="flex flex-col items-end">
+                    <h2 id="panel-title" class="text-2xl font-extrabold text-white tracking-tight">نام اتاق</h2>
+                    <span id="panel-subtitle" class="text-xs text-white/50 mt-1">مدیریت بخش</span>
+                </div>
+                <div id="panel-icon" class="w-14 h-14 rounded-2xl flex items-center justify-center text-3xl shadow-lg border border-white/20"></div>
+            </div>
+        </div>
+
+        <div class="flex-1 overflow-y-auto pr-2 pb-6 flex flex-col">
+            <div id="panel-content" class="w-full h-full relative">
+                
+                <div id="panel-meeting" class="hidden panel-section flex flex-col h-full space-y-3">
+                    <div class="bg-white/5 p-4 rounded-2xl border border-white/10 shadow-inner shrink-0">
+                        <div class="mb-3">
+                            <label class="block text-xs text-white/60 mb-1.5 font-bold">موضوع مناظره</label>
+                            <textarea id="debateTopic" rows="2" class="form-input resize-none text-sm">Consciousness and Time</textarea>
+                        </div>
+                        <div class="mb-4">
+                            <label class="block text-xs text-white/60 mb-1.5 font-bold flex justify-between">
+                                <span>حداکثر نوبت‌ها</span>
+                                <span id="maxTurnsVal" class="text-amber-400">15</span>
+                            </label>
+                            <input type="range" id="maxTurns" min="5" max="50" value="15" class="w-full accent-amber-500">
+                        </div>
+                        
+                        <div class="grid grid-cols-2 gap-3 mb-3">
+                            <button id="startDebateBtn" class="bg-amber-500/20 hover:bg-amber-500/40 text-amber-400 border border-amber-500/50 py-2.5 rounded-xl text-sm font-bold transition-all shadow-[0_0_15px_rgba(245,158,11,0.2)]">شروع مناظره</button>
+                            <button id="stopDebateBtn" class="bg-red-500/20 hover:bg-red-500/40 text-red-400 border border-red-500/50 py-2.5 rounded-xl text-sm font-bold transition-all shadow-[0_0_15px_rgba(239,68,68,0.2)]">توقف</button>
+                        </div>
+                        <button id="synthesisBtn" class="w-full bg-purple-500/20 hover:bg-purple-500/40 text-purple-400 border border-purple-500/50 py-2.5 rounded-xl text-sm font-bold transition-all shadow-[0_0_15px_rgba(168,85,247,0.2)]">سنتز و جمع‌بندی</button>
+
+                        <div class="mt-4 pt-3 border-t border-white/10 flex justify-between items-center text-sm">
+                            <span class="text-white/60">وضعیت: <span id="debateStatus" class="text-white font-bold">متوقف</span></span>
+                            <span class="text-white/60">نوبت: <span id="debateTurn" class="text-white font-bold">0 / 15</span></span>
+                        </div>
+                    </div>
+                    
+                    <div class="flex justify-between items-center px-4 py-2 bg-black/40 rounded-xl border border-white/10 text-xs font-bold text-white/70 shadow-inner shrink-0">
+                        <span>توکن‌های مصرفی: <span id="logTokens" class="text-cyan-400">0</span></span>
+                        <span>هزینه تقریبی: <span id="logCost" class="text-green-400">$0.0000</span></span>
+                    </div>
+                    
+                    <div id="chatHistory" class="flex-1 overflow-y-auto space-y-3 pr-2 scrollbar-thin rounded-xl p-2 bg-black/20 border border-white/5">
+                        <div class="text-center text-white/40 text-xs py-10">تاریخچه مناظره هنوز خالی است.</div>
+                    </div>
+
+                    <div class="mt-auto bg-black/40 p-2 rounded-xl border border-white/10 flex gap-2 shrink-0">
+                        <input type="text" id="hostInput" placeholder="پیام شما به عنوان هاست..." class="flex-1 bg-transparent border-none outline-none text-sm text-white px-3">
+                        <button id="hostSubmitBtn" class="bg-cyan-500 hover:bg-cyan-600 text-white p-2 rounded-lg transition-colors shadow-lg">
+                            <svg class="w-5 h-5 transform rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg>
+                        </button>
+                    </div>
+                </div>
+
+                <div id="panel-pr" class="hidden panel-section space-y-4">
+                    <div class="bg-white/5 p-5 rounded-2xl border border-white/10 shadow-inner">
+                        <label class="flex items-center gap-3 cursor-pointer mb-5 bg-black/20 p-3 rounded-xl">
+                            <input type="checkbox" id="tgEnable" class="w-4 h-4 text-pink-500 rounded bg-black/30 border-white/20">
+                            <span class="text-sm font-bold">فعال‌سازی ارسال به تلگرام</span>
+                        </label>
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-xs text-white/60 mb-1.5 font-bold">Bot Token (توکن بات)</label>
+                                <input type="password" id="tgToken" placeholder="123456:ABC-DEF1234ghIkl-zyx57W2v1u123ew11" class="form-input">
+                            </div>
+                            <div>
+                                <label class="block text-xs text-white/60 mb-1.5 font-bold">Chat ID (آیدی گروه/شخص)</label>
+                                <input type="text" id="tgChatId" placeholder="-1001234567890" class="form-input">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="panel-tech" class="hidden panel-section space-y-4">
+                    <div class="bg-white/5 p-5 rounded-2xl border border-white/10 shadow-inner space-y-4">
+                        <div>
+                            <label class="block text-xs text-white/60 mb-1.5 font-bold">حالت اتصال (Mode)</label>
+                            <select id="apiMode" class="form-input font-sans appearance-none">
+                                <option value="Single">Single (همه مهمان‌ها از یک API)</option>
+                                <option value="Multi">Multi (هر مهمان API مجزا دارد)</option>
+                            </select>
+                        </div>
+                        <div id="globalApiSettings" class="space-y-4 pt-4 border-t border-white/10">
+                            <div>
+                                <label class="block text-xs text-white/60 mb-1.5 font-bold">پروایدر هوش مصنوعی</label>
+                                <select id="globalProvider" class="form-input font-sans appearance-none">
+                                    <option value="OpenAI">OpenAI</option>
+                                    <option value="Anthropic (Claude)">Anthropic (Claude)</option>
+                                    <option value="Google (Gemini)">Google (Gemini)</option>
+                                    <option value="Local (Ollama/LM Studio)">Local (Ollama/LM Studio)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs text-white/60 mb-1.5 font-bold">نام مدل (Model)</label>
+                                <input type="text" id="globalModel" value="gpt-4o" class="form-input font-sans text-left" dir="ltr">
+                            </div>
+                            <div>
+                                <label class="block text-xs text-white/60 mb-1.5 font-bold">کلید API (میتواند چند تا با کاما باشد)</label>
+                                <input type="password" id="globalApiKey" placeholder="sk-..." class="form-input font-sans text-left" dir="ltr">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="panel-library" class="hidden panel-section space-y-4">
+                    <div class="bg-white/5 p-5 rounded-2xl border border-white/10 shadow-inner">
+                        <label class="block text-xs text-white/60 mb-1.5 font-bold">تعداد مهمان‌ها</label>
+                        <input type="number" id="numGuests" min="2" max="5" value="2" class="form-input mb-5">
+                        
+                        <div id="guestsContainer" class="space-y-4">
+                        </div>
+                    </div>
+                </div>
+
+                <div id="panel-computer" class="hidden panel-section space-y-4">
+                    <div class="bg-white/5 p-5 rounded-2xl border border-white/10 shadow-inner space-y-4">
+                        <button id="downloadJsonBtn" class="w-full bg-blue-500/20 hover:bg-blue-500/40 text-blue-400 border border-blue-500/50 py-3 rounded-xl text-sm font-bold transition-all shadow-[0_0_15px_rgba(59,130,246,0.2)]">📥 دانلود فایل لاگ مناظره (JSON)</button>
+                        <button id="generateMindmapBtn" class="w-full bg-emerald-500/20 hover:bg-emerald-500/40 text-emerald-400 border border-emerald-500/50 py-3 rounded-xl text-sm font-bold transition-all shadow-[0_0_15px_rgba(16,185,129,0.2)]">🧠 ساخت گراف ارتباطی (Mindmap)</button>
+                        
+                        <div id="mindmapContainer" class="hidden mt-4 w-full h-80 bg-white/10 rounded-xl overflow-auto p-2 border border-white/20 flex justify-center text-white text-left font-sans" dir="ltr">
+                            <!-- Mermaid SVG will be injected here -->
+                        </div>
+                    </div>
+                </div>
+
+                <div id="panel-archive" class="hidden panel-section flex flex-col h-full items-center justify-center">
+                    <div class="text-center text-white/40 text-sm p-4 bg-black/20 rounded-xl border border-white/5">
+                        بخش گفتگو و تاریخچه به <b>سالن جلسات</b> منتقل شده است.
+                    </div>
+                </div>
+
+            </div>
+        </div>
+        
+        <div class="pt-2 mt-2 border-t border-white/5 text-center text-[10px] text-white/30 tracking-widest font-light">
+            SimuDebate | artorki
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+    
+    <script>
+        mermaid.initialize({ startOnLoad: false, theme: 'dark', themeVariables: { fontFamily: 'Vazirmatn, Tahoma, sans-serif' } });
+
+        const API_BASE = 'http://127.0.0.1:8765/api';
+
+        let appState = {
+            chatHistory: [], turnIndex: 0, isRunning: false, estimatedTokens: 0, estimatedCost: 0, tgOffset: 0, mindmapCode: null,
+            guestStates: {},
+            settings: {
+                topic: "Consciousness and Time", tgEnable: false, tgToken: "", tgChatId: "",
+                mode: "Single", globalProvider: "OpenAI", globalModel: "gpt-4o", globalApiKey: "",
+                maxTurns: 15, numGuests: 2,
+                guests: [
+                    { id: "guest_0", name: "مهمان اول", role: "Scientist", school: "Materialism", provider: "OpenAI", model: "gpt-4o", apiKey: "" },
+                    { id: "guest_1", name: "مهمان دوم", role: "Philosopher", school: "Idealism", provider: "OpenAI", model: "gpt-4o", apiKey: "" }
+                ]
+            }
+        };
+
+        async function saveState() {
+            try { await fetch(`${API_BASE}/state`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(appState) }); } 
+            catch(e) { console.warn("Local server not reachable for saving state"); }
+        }
+
+        async function loadState() {
+            try {
+                let res = await fetch(`${API_BASE}/state`);
+                if (res.ok) {
+                    let data = await res.json();
+                    if (data && Object.keys(data).length > 0) {
+                        appState = Object.assign({}, appState, data); 
+                        document.getElementById('debateTopic').value = appState.settings.topic;
+                        document.getElementById('maxTurns').value = appState.settings.maxTurns;
+                        document.getElementById('tgEnable').checked = appState.settings.tgEnable;
+                        document.getElementById('tgToken').value = appState.settings.tgToken;
+                        document.getElementById('tgChatId').value = appState.settings.tgChatId;
+                        document.getElementById('apiMode').value = appState.settings.mode;
+                        document.getElementById('globalProvider').value = appState.settings.globalProvider;
+                        document.getElementById('globalModel').value = appState.settings.globalModel;
+                        document.getElementById('globalApiKey').value = appState.settings.globalApiKey;
+                        document.getElementById('numGuests').value = appState.settings.numGuests;
+                        document.getElementById('globalApiSettings').style.display = appState.settings.mode === 'Single' ? 'block' : 'none';
+                        if (appState.mindmapCode) {
+                            let container = document.getElementById('mindmapContainer');
+                            container.classList.remove('hidden');
+                            if(window.mermaid) {
+                                try {
+                                    let id = `mermaid-svg-load-${Date.now()}`;
+                                    const { svg } = await mermaid.render(id, appState.mindmapCode);
+                                    container.innerHTML = svg;
+                                } catch (err) {
+                                    console.error("Mermaid Render Error:", err);
+                                    container.innerHTML = `<div class="text-red-400 text-xs p-2">خطا در رندر گراف:</div><pre dir="ltr" class="text-[10px] text-white/50 text-left overflow-auto">${appState.mindmapCode}</pre>`;
+                                }
+                            }
+                        }
+                    }
+                }
+            } catch(e) { console.warn("No persistent state found, using default."); }
+        }
+
+        async function callLlmApi(provider, model, apiKeyStr, systemPrompt, prompt, maxTokens = 2000) {
+            try {
+                let res = await fetch(`${API_BASE}/llm`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ provider, model, api_key: apiKeyStr, system_prompt: systemPrompt, prompt, max_tokens: maxTokens })
+                });
+                return await res.json();
+            } catch (e) {
+                console.error("Local Server Error:", e);
+                return { content: null, tokens: 0, cost: 0 };
+            }
+        }
+
+        async function sendTgMessage(text) {
+            if (!appState.settings.tgEnable || !appState.settings.tgToken || !appState.settings.tgChatId) return;
+            try {
+                await fetch(`${API_BASE}/telegram/send`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ token: appState.settings.tgToken, chat_id: appState.settings.tgChatId, text: text }) });
+            } catch(e) { console.warn("Failed to send TG message"); }
+        }
+
+        async function fetchTgUpdates() {
+            if (!appState.settings.tgEnable || !appState.settings.tgToken || !appState.settings.tgChatId) return [];
+            try {
+                let res = await fetch(`${API_BASE}/telegram/updates?token=${appState.settings.tgToken}&chat_id=${appState.settings.tgChatId}&offset=${appState.tgOffset}`);
+                let data = await res.json();
+                appState.tgOffset = data.offset; saveState();
+                return data.updates;
+            } catch (e) { return []; }
+        }
+
+        function parseJsonFromText(text) {
+            try { return JSON.parse(text); } catch(e) {}
+            try { let match = text.match(/```(?:json)?\s*(\{[\s\S]*?\})\s*```/); if (match) return JSON.parse(match[1]); } catch(e) {}
+            try { let match = text.match(/(\{[\s\S]*?\})/); if (match) return JSON.parse(match[1]); } catch(e) {}
+            return null;
+        }
+
+        function initGuestState(gid) {
+            if (!appState.guestStates[gid]) appState.guestStates[gid] = { beliefs: [], claims: [], supported_claims: [], challenged_claims: [], concessions: [], uncertainties: [], objectives: [], opponents: {} };
+        }
+
+        function trimState(stateDict, maxItems = 15) {
+            if (typeof stateDict !== 'object' || !stateDict) return stateDict;
+            for (let k in stateDict) { if (Array.isArray(stateDict[k]) && stateDict[k].length > maxItems) stateDict[k] = stateDict[k].slice(-maxItems); }
+            return stateDict;
+        }
+
+        function addToHistory(speaker, role, text, tokens = 0, cost = 0.0) {
+            appState.chatHistory.push({ timestamp: new Date().toISOString(), speaker, role, text });
+            appState.estimatedTokens += tokens > 0 ? tokens : Math.floor(text.split(' ').length * 1.3);
+            appState.estimatedCost += cost;
+            saveState();
+        }
+
+        function generateTranscript() {
+            if (appState.chatHistory.length === 0) return "Start";
+            let history = appState.chatHistory, transcript = "";
+            if (history.length > 10) {
+                transcript = "Key Initial Claims:\n" + history.slice(0, 3).map(m => `[${m.speaker} - ${m.role}]: ${m.text}`).join('\n') + 
+                             "\n\n[Rolling Summary / Middle Turns Omitted]\n\nActive Disagreements and Recent Turns:\n" + 
+                             history.slice(-7).map(m => `[${m.speaker} - ${m.role}]: ${m.text}`).join('\n');
+            } else {
+                transcript = "Raw Transcript:\n" + history.map(m => `\n[${m.speaker} - ${m.role}]: ${m.text}`).join('\n');
+            }
+            return transcript;
+        }
+
+        function getGuestSystemPrompt(guest, state, mode) {
+            let stateStr = JSON.stringify(state || {});
+            let base = `تو نقش یک ${guest.role} با مکتب ${guest.school} به اسم ${guest.name} رو داری.\nموضوع: ${appState.settings.topic}\nوضعیت شناختی تو تا این لحظه:\n${stateStr}\n\nقوانین:\n1. رفتار متخصص و علمی.\n2. ارجاع معتبر، بدون توهم.\n3. پرهیز از گزافه‌گویی.\n4. بدون جملات کلیشه‌ای.\n5. پاسخ به تلگرام در صورت وجود.`;
+            if (mode === "turn") base += `\nخروجی تو باید دقیقاً یک JSON معتبر با ساختار زیر باشد:\n{\n  "state": {\n    "beliefs": ["باورهای پایه تو"],\n    "claims": ["ادعاهای جدید تو در این نوبت"],\n    "supported_claims": ["ادعاهای دیگران که تایید می‌کنی"],\n    "challenged_claims": ["ادعاهای دیگران که رد می‌کنی"],\n    "concessions": ["عقب‌نشینی‌های تو"],\n    "uncertainties": ["نقاط ابهام"],\n    "objectives": ["هدف تو در ادامه بحث"],\n    "opponents": {"نام مهمان": "وضعیت مخالفت"}\n  },\n  "spoken_text": "متن پاسخ تو در مناظره"\n}`;
+            else if (mode === "interrupt") base += `\nقوانین وقفه: تنها در صورتی که تناقض شدید، خطای فاحش یا حمله مستقیم وجود دارد وقفه ایجاد کن.\nخروجی تو باید دقیقاً یک JSON معتبر با ساختار زیر باشد:\n{\n  "interrupt": true یا false,\n  "reason": "دلیل وقفه",\n  "text": "جمله کوتاه وقفه (حداکثر 15 کلمه)"\n}`;
+            return base;
+        }
+
+        let loopTimeout = null;
+        async function debateLoop() {
+            if (!appState.isRunning) return;
+            if (appState.turnIndex >= appState.settings.maxTurns) {
+                appState.isRunning = false; updateUI(); saveState();
+                if(appState.settings.tgEnable) sendTgMessage("End"); return;
+            }
+
+            document.getElementById('debateStatus').innerText = "در حال تفکر...";
+            
+            // اصلاح شماره 1: خواندن پیام‌های تلگرام به صورت پیوسته (حذف محدودیت)
+            if (appState.settings.tgEnable) {
+                let updates = await fetchTgUpdates();
+                for (let u of updates) addToHistory(u.user, "Telegram", u.text);
+            }
+
+            let cGuest = appState.settings.guests[appState.turnIndex % appState.settings.numGuests];
+            initGuestState(cGuest.id);
+
+            if (appState.chatHistory.length > 1) {
+                let others = appState.settings.guests.filter(g => g.id !== cGuest.id);
+                let interrupter = others[Math.floor(Math.random() * others.length)];
+                let iKey = appState.settings.mode === "Multi" ? interrupter.apiKey : appState.settings.globalApiKey;
+                let iProv = appState.settings.mode === "Multi" ? interrupter.provider : appState.settings.globalProvider;
+                let iMod = appState.settings.mode === "Multi" ? interrupter.model : appState.settings.globalModel;
+
+                initGuestState(interrupter.id);
+                let intRes = await callLlmApi(iProv, iMod, iKey, getGuestSystemPrompt(interrupter, appState.guestStates[interrupter.id], "interrupt"), generateTranscript() + "\n\nآیا شرایط وقفه برقرار است؟", 150);
+                if (intRes.content && !intRes.content.includes("[خطا")) {
+                    let intData = parseJsonFromText(intRes.content);
+                    if (intData && intData.interrupt && intData.text) {
+                        addToHistory(interrupter.name, "Interruption", `*(می‌پرد وسط حرف)* ${intData.text}`, intRes.tokens, intRes.cost);
+                        if (appState.settings.tgEnable) sendTgMessage(`${interrupter.name}:\n${intData.text}`);
+                        updateUI();
+                    }
+                }
+            }
+
+            if (!appState.isRunning) return;
+
+            let cKey = appState.settings.mode === "Multi" ? cGuest.apiKey : appState.settings.globalApiKey;
+            let cProv = appState.settings.mode === "Multi" ? cGuest.provider : appState.settings.globalProvider;
+            let cMod = appState.settings.mode === "Multi" ? cGuest.model : appState.settings.globalModel;
+
+            let res = await callLlmApi(cProv, cMod, cKey, getGuestSystemPrompt(cGuest, appState.guestStates[cGuest.id], "turn"), generateTranscript() + `\n\nحالا نوبت توست ${cGuest.name}. پاسخ بده:`, 2000);
+            
+            if (!appState.isRunning) return;
+            if (!res.content) {
+                appState.isRunning = false; updateUI(); saveState();
+                alert("خطا در ارتباط با سرور محلی (SimuDebate_server.py). مطمئن شوید سرور در حال اجراست."); return;
+            }
+
+            let turnData = parseJsonFromText(res.content);
+            let spoken = res.content;
+            if (turnData && turnData.spoken_text) {
+                spoken = turnData.spoken_text;
+                if (turnData.state) appState.guestStates[cGuest.id] = trimState(turnData.state);
+            }
+
+            addToHistory(cGuest.name, cGuest.role, spoken, res.tokens, res.cost);
+            appState.turnIndex++;
+            if (appState.settings.tgEnable) sendTgMessage(`${cGuest.name} (${cGuest.role})\n\n${spoken}`);
+            
+            updateUI(); saveState();
+            if (appState.isRunning) loopTimeout = setTimeout(debateLoop, 3000);
+        }
+
+        function renderGuests() {
+            let container = document.getElementById('guestsContainer'); container.innerHTML = '';
+            appState.settings.guests.forEach((g, i) => {
+                let div = document.createElement('div'); div.className = "bg-black/30 p-4 rounded-xl border border-white/5 space-y-3";
+                let apiHtml = '';
+                if (appState.settings.mode === 'Multi') {
+                    apiHtml = `
+                    <div class="mt-3 pt-3 border-t border-white/10 space-y-2">
+                        <select id="gProv_${i}" class="form-input text-xs">
+                            <option value="OpenAI" ${g.provider==='OpenAI'?'selected':''}>OpenAI</option>
+                            <option value="Anthropic (Claude)" ${g.provider==='Anthropic (Claude)'?'selected':''}>Claude</option>
+                            <option value="Google (Gemini)" ${g.provider==='Google (Gemini)'?'selected':''}>Gemini</option>
+                            <option value="Local (Ollama/LM Studio)" ${g.provider==='Local (Ollama/LM Studio)'?'selected':''}>Local</option>
+                        </select>
+                        <input type="text" id="gMod_${i}" value="${g.model}" placeholder="Model" class="form-input text-xs font-sans text-left" dir="ltr">
+                        <input type="password" id="gKey_${i}" value="${g.apiKey}" placeholder="API Key" class="form-input text-xs font-sans text-left" dir="ltr">
+                    </div>`;
+                }
+                div.innerHTML = `
+                    <div class="text-xs font-bold text-white/70 mb-2 flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-indigo-400"></span> مهمان ${i+1}</div>
+                    <input type="text" id="gName_${i}" value="${g.name}" placeholder="نام مهمان" class="form-input">
+                    <input type="text" id="gRole_${i}" value="${g.role}" placeholder="نقش (مانند دانشمند)" class="form-input">
+                    <input type="text" id="gSchool_${i}" value="${g.school}" placeholder="مکتب فکری" class="form-input">
+                    ${apiHtml}`;
+                container.appendChild(div);
+
+                document.getElementById(`gName_${i}`).addEventListener('change', e => { g.name = e.target.value; saveState(); });
+                document.getElementById(`gRole_${i}`).addEventListener('change', e => { g.role = e.target.value; saveState(); });
+                document.getElementById(`gSchool_${i}`).addEventListener('change', e => { g.school = e.target.value; saveState(); });
+                if(appState.settings.mode === 'Multi') {
+                    document.getElementById(`gProv_${i}`).addEventListener('change', e => { g.provider = e.target.value; saveState(); });
+                    document.getElementById(`gMod_${i}`).addEventListener('change', e => { g.model = e.target.value; saveState(); });
+                    document.getElementById(`gKey_${i}`).addEventListener('change', e => { g.apiKey = e.target.value; saveState(); });
+                }
+            });
+        }
+
+        function updateUI() {
+            document.getElementById('debateStatus').innerText = appState.isRunning ? "در حال اجرا" : "متوقف";
+            document.getElementById('debateStatus').className = appState.isRunning ? "text-emerald-400 font-bold" : "text-white font-bold";
+            document.getElementById('debateTurn').innerText = `${appState.turnIndex} / ${appState.settings.maxTurns}`;
+            document.getElementById('logTokens').innerText = appState.estimatedTokens;
+            document.getElementById('logCost').innerText = `$${appState.estimatedCost.toFixed(4)}`;
+
+            let chatDiv = document.getElementById('chatHistory'); chatDiv.innerHTML = '';
+            if (appState.chatHistory.length === 0) {
+                chatDiv.innerHTML = '<div class="text-center text-white/40 text-xs py-10">تاریخچه مناظره هنوز خالی است.</div>';
+            } else {
+                appState.chatHistory.forEach(msg => {
+                    let msgEl = document.createElement('div');
+                    let bg = msg.role === 'Host' ? 'bg-indigo-500/20' : 'bg-black/40';
+                    let border = msg.role === 'Host' ? 'border-indigo-500/30' : 'border-white/5';
+                    msgEl.className = `p-4 rounded-xl border ${border} ${bg} text-sm shadow-sm`;
+                    msgEl.innerHTML = `
+                        <div class="flex items-center gap-2 mb-2 pb-2 border-b border-white/5">
+                            <span class="font-bold text-white/90">${msg.speaker}</span>
+                            <span class="text-[10px] px-2 py-0.5 rounded-full bg-white/10 text-white/60">${msg.role}</span>
+                        </div>
+                        <div class="text-white/80 leading-relaxed text-justify">${msg.text}</div>`;
+                    chatDiv.appendChild(msgEl);
+                });
+                chatDiv.scrollTop = chatDiv.scrollHeight;
+            }
+        }
+
+        function bindInputs() {
+            document.getElementById('debateTopic').addEventListener('change', e => { appState.settings.topic = e.target.value; saveState(); });
+            document.getElementById('maxTurns').addEventListener('input', e => { appState.settings.maxTurns = parseInt(e.target.value); document.getElementById('maxTurnsVal').innerText = appState.settings.maxTurns; saveState(); });
+            document.getElementById('tgEnable').addEventListener('change', e => { appState.settings.tgEnable = e.target.checked; saveState(); });
+            document.getElementById('tgToken').addEventListener('change', e => { appState.settings.tgToken = e.target.value; saveState(); });
+            document.getElementById('tgChatId').addEventListener('change', e => { appState.settings.tgChatId = e.target.value; saveState(); });
+            document.getElementById('apiMode').addEventListener('change', e => {
+                appState.settings.mode = e.target.value;
+                document.getElementById('globalApiSettings').style.display = appState.settings.mode === 'Single' ? 'block' : 'none';
+                renderGuests(); saveState();
+            });
+            document.getElementById('globalProvider').addEventListener('change', e => { appState.settings.globalProvider = e.target.value; saveState(); });
+            document.getElementById('globalModel').addEventListener('change', e => { appState.settings.globalModel = e.target.value; saveState(); });
+            document.getElementById('globalApiKey').addEventListener('change', e => { appState.settings.globalApiKey = e.target.value; saveState(); });
+
+            document.getElementById('numGuests').addEventListener('change', e => {
+                let num = parseInt(e.target.value); if (num < 2) num = 2; if (num > 5) num = 5;
+                appState.settings.numGuests = num;
+                while(appState.settings.guests.length < num) appState.settings.guests.push({ id: `guest_${appState.settings.guests.length}`, name: `مهمان ${appState.settings.guests.length+1}`, role: "Role", school: "School", provider: "OpenAI", model: "gpt-4o", apiKey: "" });
+                appState.settings.guests = appState.settings.guests.slice(0, num);
+                renderGuests(); saveState(); syncGuestCharacters(); 
+            });
+
+            document.getElementById('startDebateBtn').addEventListener('click', () => {
+                if(!appState.isRunning && appState.turnIndex < appState.settings.maxTurns) {
+                    appState.isRunning = true; saveState();
+                    if(appState.settings.tgEnable && appState.chatHistory.length === 0) sendTgMessage(`Started\nTopic: ${appState.settings.topic}\nGuests: ${appState.settings.guests.map(g=>g.name).join(", ")}`);
+                    updateUI(); debateLoop();
+                }
+            });
+
+            document.getElementById('stopDebateBtn').addEventListener('click', () => { appState.isRunning = false; if(loopTimeout) clearTimeout(loopTimeout); updateUI(); saveState(); });
+
+            document.getElementById('synthesisBtn').addEventListener('click', async () => {
+                let btn = document.getElementById('synthesisBtn'); btn.innerText = "در حال پردازش..."; btn.disabled = true;
+                let hKey = appState.settings.globalApiKey, hProv = appState.settings.globalProvider, hMod = appState.settings.globalModel;
+                let res = await callLlmApi(hProv, hMod, hKey, "تو یک تحلیلگر ارشد هستی. مناظره به پایان رسیده است. بر اساس تاریخچه، یک سنتز ارائه بده. 1. نقاط توافق 2. نقاط اختلاف 3. نیازهای آینده پژوهش", generateTranscript() + "\n\nاکنون سنتز نهایی را بر اساس دستورالعملت بنویس.", 2000);
+                if(res.content) { addToHistory("Synthesizer", "Moderator", res.content, res.tokens, res.cost); updateUI(); } else alert("خطا در ارتباط با سرور یا تولید سنتز.");
+                btn.innerText = "سنتز و جمع‌بندی"; btn.disabled = false;
+            });
+            
+            document.getElementById('hostSubmitBtn').addEventListener('click', () => {
+                let inp = document.getElementById('hostInput');
+                if(inp.value.trim()) { addToHistory("شما (هاست)", "Host", inp.value.trim(), 0, 0); inp.value = ""; updateUI(); }
+            });
+            
+            document.getElementById('downloadJsonBtn').addEventListener('click', () => {
+                let dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify({ topic: appState.settings.topic, date: new Date().toISOString(), guests: appState.settings.guests.map(g => ({name: g.name, role: g.role, school: g.school})), transcript: appState.chatHistory }, null, 2));
+                let dlAnchorElem = document.createElement('a'); dlAnchorElem.setAttribute("href", dataStr); dlAnchorElem.setAttribute("download", "SimuDebate_Log.json"); dlAnchorElem.click();
+            });
+
+            document.getElementById('generateMindmapBtn').addEventListener('click', async () => {
+                let btn = document.getElementById('generateMindmapBtn'); btn.innerText = "در حال ساخت..."; btn.disabled = true;
+                let hKey = appState.settings.globalApiKey, hProv = appState.settings.globalProvider, hMod = appState.settings.globalModel;
+                let res = await callLlmApi(hProv, hMod, hKey, "تو یک متخصص تصویرسازی هستی. یک گراف ارتباطی با سینتکس Mermaid.js تولید کن. فقط کد خام Mermaid برگردان.", generateTranscript() + "\n\nاکنون کد Mermaid را تولید کن.", 1500);
+                if(res.content) {
+                    let match = res.content.match(/```(?:mermaid)?\n?([\s\S]*?)```/);
+                    appState.mindmapCode = match ? match[1].trim() : res.content.trim();
+                    let container = document.getElementById('mindmapContainer');
+                    container.classList.remove('hidden');
+                    
+                    // اصلاح شماره 2: رندر امن گراف Mermaid به جای کرش کردن کل برنامه
+                    if(window.mermaid) {
+                        try {
+                            let id = `mermaid-svg-${Date.now()}`;
+                            const { svg } = await mermaid.render(id, appState.mindmapCode);
+                            container.innerHTML = svg;
+                        } catch (err) {
+                            console.error("Mermaid Render Error:", err);
+                            container.innerHTML = `
+                                <div class="text-red-400 text-xs p-2">خطا در رندر گراف. هوش مصنوعی کد نامعتبری تولید کرد:</div>
+                                <pre dir="ltr" class="text-[10px] text-white/50 text-left overflow-auto">${appState.mindmapCode}</pre>
+                            `;
+                        }
+                    }
+                    saveState();
+                } else alert("خطا در تولید مایندمپ.");
+                btn.innerText = "ساخت گراف ارتباطی (Mindmap)"; btn.disabled = false;
+            });
+        }
+
+        let scene, camera, renderer, controls;
+        let raycaster, mouse;
+        let interactiveRooms = [];
+        let characters = [];
+        let roomLights = {};
+        let clock = new THREE.Clock();
+
+        const colors = {
+            baseDark: 0x080912, wall: 0x5a2aa8, wallDark: 0x32155f, trim: 0x120b24, trimAccent: 0xffb000,
+            floorBase: 0x100a18, floorRoom: 0x32164f, ceiling: 0x25103d, wood: 0xd47b22, woodDark: 0x8f3e0b,
+            metal: 0xb8bfd3, metalDark: 0x363b4a, glass: 0x42dfff, screenGlow: 0x9df5ff, plant: 0x00d84a,
+            plantDark: 0x008f32, pot: 0xf0440a, skin: 0xffd9ad, padComputer: 0x1557ff, padMeeting: 0xff9f00,
+            padPR: 0xff174f, padLibrary: 0xc000ff, padArchive: 0x00c8e8, padTech: 0x00b83a
+        };
+
+        let clayNoiseTexture, clayRoughnessTexture;
+
+        function createMicroTexture(seed = 17) {
+            const size = 256; const canvas = document.createElement('canvas'); canvas.width = size; canvas.height = size;
+            const ctx = canvas.getContext('2d'); const img = ctx.createImageData(size, size);
+            let state = seed >>> 0; const rand = () => { state = (1664525 * state + 1013904223) >>> 0; return state / 4294967296; };
+            const grid = 48; const coarse = Array.from({length: grid}, () => Array.from({length: grid}, () => rand()));
+            const smooth = (x, y) => {
+                const gx = x / (size / (grid - 1)); const gy = y / (size / (grid - 1));
+                const x0 = Math.floor(gx), y0 = Math.floor(gy); const x1 = Math.min(x0 + 1, grid - 1), y1 = Math.min(y0 + 1, grid - 1);
+                const tx = gx - x0, ty = gy - y0; const sx = tx * tx * (3 - 2 * tx), sy = ty * ty * (3 - 2 * ty);
+                const a = coarse[y0][x0] * (1 - sx) + coarse[y0][x1] * sx; const b = coarse[y1][x0] * (1 - sx) + coarse[y1][x1] * sx;
+                return a * (1 - sy) + b * sy;
+            };
+            for (let y = 0; y < size; y++) {
+                for (let x = 0; x < size; x++) {
+                    const n1 = smooth(x, y); const n2 = smooth((x * 7 + 19) % size, (y * 7 + 31) % size);
+                    const fine = (Math.sin(x * 0.82 + y * 1.17) + Math.sin(x * 1.63 - y * 0.71) + Math.sin((x + y) * 0.37)) / 3;
+                    const n = Math.max(0, Math.min(1, n1 * 0.58 + n2 * 0.27 + (fine * 0.08 + 0.08)));
+                    const v = Math.floor(92 + n * 136); const i = (y * size + x) * 4;
+                    img.data[i] = v; img.data[i+1] = v; img.data[i+2] = v; img.data[i+3] = 255;
+                }
+            }
+            ctx.putImageData(img, 0, 0);
+            const tex = new THREE.CanvasTexture(canvas); tex.wrapS = tex.wrapT = THREE.RepeatWrapping; tex.anisotropy = renderer ? renderer.capabilities.getMaxAnisotropy() : 8; tex.needsUpdate = true;
+            return tex;
+        }
+
+        function initMaterialTextures() {
+            clayNoiseTexture = createMicroTexture(17); clayRoughnessTexture = createMicroTexture(53);
+            clayNoiseTexture.repeat.set(9.0, 9.0); clayRoughnessTexture.repeat.set(11.0, 11.0);
+        }
+
+        function createClayMaterial(color, roughness = 0.62, metalness = 0.03, bumpScale = 0.018) {
+            return new THREE.MeshStandardMaterial({ color: color, roughness: roughness, metalness: metalness, bumpMap: clayNoiseTexture, bumpScale: bumpScale, roughnessMap: clayRoughnessTexture });
+        }
+
+        function createEmissiveMaterial(color, intensity = 1.5) {
+            return new THREE.MeshStandardMaterial({ color: color, emissive: color, emissiveIntensity: intensity, roughness: 0.28, metalness: 0.0 });
+        }
+
+        window.onload = async function () {
+            initMaterialTextures();
+            init();
+            await loadState();
+            bindInputs();
+            renderGuests();
+            updateUI();
+            syncGuestCharacters(); 
+            animate();
+        };
+
+        function init() {
+            const container = document.getElementById('canvas-container');
+            
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(colors.baseDark);
+            scene.fog = new THREE.FogExp2(colors.baseDark, 0.010);
+
+            // FIX 2: Changed to PerspectiveCamera to fix the optical illusion of inverted perspective.
+            const aspect = window.innerWidth / window.innerHeight;
+            camera = new THREE.PerspectiveCamera(35, aspect, 0.1, 1000);
+            camera.position.set(50, 45, 50);
+            camera.lookAt(0, 0, 0);
+
+            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            renderer.outputEncoding = THREE.sRGBEncoding;
+            renderer.toneMapping = THREE.NoToneMapping;
+            renderer.toneMappingExposure = 1.0;
+            container.appendChild(renderer.domElement);
+
+            controls = new THREE.OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.05;
+            controls.enablePan = false;
+            controls.maxPolarAngle = Math.PI / 2.2;
+            controls.minPolarAngle = Math.PI / 6;
+
+            setupLighting();
+            buildEnvironment();
+
+            raycaster = new THREE.Raycaster();
+            mouse = new THREE.Vector2();
+            
+            window.addEventListener('resize', onWindowResize);
+            window.addEventListener('mousemove', onMouseMove);
+            window.addEventListener('click', onClick);
+            document.getElementById('close-btn').addEventListener('click', closePanel);
+        }
+
+        function setupLighting() {
+            const ambientLight = new THREE.AmbientLight(0x6f61b8, 0.16); scene.add(ambientLight);
+            const hemiLight = new THREE.HemisphereLight(0x8f7cff, 0x2b1220, 0.34); hemiLight.position.set(0, 30, 0); scene.add(hemiLight);
+
+            const mainLight = new THREE.DirectionalLight(0xffd8a0, 2.15);
+            mainLight.position.set(24, 38, 18); mainLight.target.position.set(0, 0, 0);
+            mainLight.castShadow = true; mainLight.shadow.mapSize.width = 4096; mainLight.shadow.mapSize.height = 4096;
+            const d = 24; mainLight.shadow.camera.left = -d; mainLight.shadow.camera.right = d; mainLight.shadow.camera.top = d; mainLight.shadow.camera.bottom = -d;
+            mainLight.shadow.camera.near = 0.5; mainLight.shadow.camera.far = 130; mainLight.shadow.bias = -0.00018; mainLight.shadow.normalBias = 0.012; mainLight.shadow.radius = 3.2;
+            scene.add(mainLight, mainLight.target);
+
+            const fillLight = new THREE.DirectionalLight(0x6655ff, 0.13); fillLight.position.set(-30, 20, 24); fillLight.target.position.set(0, 1, 0); scene.add(fillLight, fillLight.target);
+            const rimLight = new THREE.DirectionalLight(0x8f4dff, 0.22); rimLight.position.set(-18, 16, -32); rimLight.target.position.set(0, 2, 0); scene.add(rimLight, rimLight.target);
+            const bounceLight = new THREE.PointLight(0xff8a5c, 0.12, 32, 2); bounceLight.position.set(0, 0.65, 0); scene.add(bounceLight);
+
+            [ [-11, 7, -7], [11, 7, -7], [-11, 5, 7], [11, 5, 7] ].forEach(([x,y,z], idx) => {
+                const soft = new THREE.PointLight(idx % 2 ? 0x8f7cff : 0xffd8a0, 0.045, 11, 2); soft.position.set(x, y, z); scene.add(soft);
+            });
+        }
+
+        const buildProps = {
+            wall: (w, h, d, x, y, z, opts = {}) => {
+                const group = new THREE.Group();
+                const mesh = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), createClayMaterial(colors.wall, 0.75, 0.15)); mesh.castShadow = true; mesh.receiveShadow = true; group.add(mesh);
+                const isLong = w >= d;
+                const baseGeo = isLong ? new THREE.BoxGeometry(w + 0.1, 0.32, d + 0.08) : new THREE.BoxGeometry(w + 0.08, 0.32, d + 0.1);
+                const baseboard = new THREE.Mesh(baseGeo, createClayMaterial(colors.trim, 0.6, 0.2)); baseboard.position.y = -h / 2 + 0.16; baseboard.castShadow = true; baseboard.receiveShadow = true; group.add(baseboard);
+                const accentGeo = isLong ? new THREE.BoxGeometry(w + 0.12, 0.04, d + 0.1) : new THREE.BoxGeometry(w + 0.1, 0.04, d + 0.12);
+                const accent = new THREE.Mesh(accentGeo, createEmissiveMaterial(colors.trimAccent, 0.25)); accent.position.y = -h / 2 + 0.34; group.add(accent);
+                if (!opts.noCrown) {
+                    const crownGeo = isLong ? new THREE.BoxGeometry(w + 0.06, 0.18, d + 0.06) : new THREE.BoxGeometry(w + 0.06, 0.18, d + 0.06);
+                    const crown = new THREE.Mesh(crownGeo, createClayMaterial(colors.trim, 0.55, 0.15)); crown.position.y = h / 2 - 0.1; crown.castShadow = true; group.add(crown);
+                }
+                group.position.set(x, y, z); scene.add(group); return group;
+            },
+            table: (x, z, w, d) => {
+                const group = new THREE.Group();
+                const top = new THREE.Mesh(new THREE.BoxGeometry(w, 0.15, d), createClayMaterial(colors.wood, 0.55, 0.05)); top.position.y = 0.8; top.castShadow = true; top.receiveShadow = true;
+                const edgeBand = new THREE.Mesh(new THREE.BoxGeometry(w + 0.04, 0.05, d + 0.04), createClayMaterial(colors.woodDark, 0.6)); edgeBand.position.y = 0.73; edgeBand.castShadow = true;
+                const legMat = createClayMaterial(colors.metal, 0.35, 0.6);
+                [ [w/2-0.15, d/2-0.15], [-w/2+0.15, d/2-0.15], [w/2-0.15, -d/2+0.15], [-w/2+0.15, -d/2+0.15] ].forEach(pos => { const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.04, 0.8, 8), legMat); leg.position.set(pos[0], 0.4, pos[1]); leg.castShadow = true; group.add(leg); });
+                if (w >= 2.2) {
+                    const drawer = new THREE.Mesh(new THREE.BoxGeometry(w * 0.4, 0.18, d * 0.25), createClayMaterial(colors.woodDark, 0.6)); drawer.position.set(0, 0.62, d/2 - 0.2); drawer.castShadow = true; group.add(drawer);
+                    const handle = new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.015, w * 0.18, 6), createClayMaterial(colors.metal, 0.3, 0.7)); handle.rotation.z = Math.PI / 2; handle.position.set(0, 0.62, d/2 - 0.1); group.add(handle);
+                }
+                group.add(top, edgeBand); group.position.set(x, 0, z); scene.add(group);
+            },
+            chair: (x, z, rotY = 0) => {
+                const group = new THREE.Group();
+                const seatMat = createClayMaterial(0x454657, 0.6, 0.15); const seat = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.15, 0.7), seatMat); seat.position.y = 0.5; seat.castShadow = true;
+                const back = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.7, 0.15), seatMat); back.position.set(0, 0.9, -0.3); back.castShadow = true;
+                const armMat = createClayMaterial(colors.metalDark, 0.4, 0.5);
+                [-0.36, 0.36].forEach(ax => { const arm = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.3, 0.55), armMat); arm.position.set(ax, 0.68, -0.05); arm.castShadow = true; group.add(arm); });
+                const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 0.5, 8), createClayMaterial(colors.metal, 0.35, 0.6)); leg.position.y = 0.25; leg.castShadow = true;
+                const base = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.05, 0.6), createClayMaterial(colors.metal, 0.35, 0.6)); base.position.y = 0.025;
+                group.add(seat, back, leg, base); group.position.set(x, 0, z); group.rotation.y = rotY; scene.add(group);
+            },
+            laptop: (x, y, z, rotY = 0) => {
+                const group = new THREE.Group(); const base = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.03, 0.45), createClayMaterial(0xdddddd)); base.position.y = 0.015;
+                const screen = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.45, 0.03), createClayMaterial(0xaaaaaa)); screen.position.set(0, 0.22, -0.21); screen.rotation.x = -0.15;
+                const display = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.4, 0.01), createEmissiveMaterial(colors.screenGlow, 0.8)); display.position.set(0, 0.22, -0.19); display.rotation.x = -0.15;
+                group.add(base, screen, display); group.position.set(x, y, z); group.rotation.y = rotY; scene.add(group);
+            },
+            monitor: (x, y, z, rotY = 0) => {
+                const group = new THREE.Group(); const screenBase = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.7, 0.05), createClayMaterial(0x121218, 0.3, 0.4)); screenBase.position.y = 0.5;
+                const bezelGlow = new THREE.Mesh(new THREE.BoxGeometry(1.17, 0.67, 0.01), createEmissiveMaterial(0x38bdf8, 0.5)); bezelGlow.position.set(0, 0.5, 0.025);
+                const display = new THREE.Mesh(new THREE.BoxGeometry(1.12, 0.62, 0.02), createEmissiveMaterial(colors.screenGlow, 1.1)); display.position.set(0, 0.5, 0.035);
+                const stand = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.06, 0.4, 8), createClayMaterial(0x2a2c34, 0.4, 0.4)); stand.position.y = 0.2;
+                const foot = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.04, 0.3), createClayMaterial(0x2a2c34, 0.4, 0.4)); foot.position.y = 0.02;
+                group.add(screenBase, bezelGlow, display, stand, foot); group.position.set(x, y, z); group.rotation.y = rotY; group.castShadow = true; scene.add(group);
+            },
+            keyboard: (x, y, z, rotY=0) => {
+                const kb = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.03, 0.25), createClayMaterial(0x333333)); kb.position.set(x, y+0.015, z); kb.rotation.y = rotY; kb.castShadow = true; scene.add(kb);
+            },
+            plant: (x, z) => {
+                const group = new THREE.Group(); const pot = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.2, 0.6, 16), createClayMaterial(colors.pot, 0.7, 0.05)); pot.position.y = 0.3; pot.castShadow = true;
+                const potRim = new THREE.Mesh(new THREE.TorusGeometry(0.3, 0.04, 8, 16), createClayMaterial(colors.pot, 0.6, 0.1)); potRim.rotation.x = Math.PI/2; potRim.position.y = 0.6;
+                const leafMatA = createClayMaterial(colors.plant, 0.8, 0.05); const leafMatB = createClayMaterial(colors.plantDark, 0.8, 0.05);
+                const l1 = new THREE.Mesh(new THREE.SphereGeometry(0.4, 16, 16), leafMatA); l1.position.set(0, 0.8, 0); l1.scale.set(1, 1.2, 1); l1.castShadow = true;
+                const l2 = new THREE.Mesh(new THREE.SphereGeometry(0.3, 16, 16), leafMatB); l2.position.set(0.25, 0.6, 0.25); l2.castShadow = true;
+                const l3 = new THREE.Mesh(new THREE.SphereGeometry(0.3, 16, 16), leafMatA); l3.position.set(-0.25, 0.7, -0.15); l3.castShadow = true;
+                const l4 = new THREE.Mesh(new THREE.SphereGeometry(0.22, 14, 14), leafMatB); l4.position.set(0.05, 1.05, -0.1); l4.castShadow = true;
+                group.add(pot, potRim, l1, l2, l3, l4); group.position.set(x, 0, z); scene.add(group);
+            },
+            bookshelf: (x, z, rotY = 0) => {
+                const group = new THREE.Group(); const woodMat = createClayMaterial(colors.wood, 0.65, 0.05);
+                const frame = new THREE.Mesh(new THREE.BoxGeometry(2.4, 3, 0.7), createClayMaterial(colors.woodDark, 0.6)); frame.position.y = 1.5; frame.castShadow = true; frame.receiveShadow = true; group.add(frame);
+                const backPanel = new THREE.Mesh(new THREE.BoxGeometry(2.25, 2.85, 0.05), createClayMaterial(0x14151d, 0.9)); backPanel.position.set(0, 1.5, -0.32); group.add(backPanel);
+                const frameTop = new THREE.Mesh(new THREE.BoxGeometry(2.5, 0.1, 0.75), woodMat); frameTop.position.y = 3.0; frameTop.castShadow = true; group.add(frameTop);
+                const frameBase = new THREE.Mesh(new THREE.BoxGeometry(2.5, 0.12, 0.75), createClayMaterial(colors.woodDark, 0.6)); frameBase.position.y = 0.06; frameBase.castShadow = true; group.add(frameBase);
+                const shelves = [0.55, 1.15, 1.75, 2.35];
+                shelves.forEach(h => { const shelf = new THREE.Mesh(new THREE.BoxGeometry(2.3, 0.06, 0.65), woodMat); shelf.position.y = h; shelf.castShadow = true; shelf.receiveShadow = true; group.add(shelf); });
+                const bookColors = [0xdc2626, 0x2563eb, 0x059669, 0xf59e0b, 0x7c3aed, 0xdb2777, 0xf4f4f5, 0x1e293b, 0x0d9488, 0xea580c];
+                shelves.forEach((shelfY, sIdx) => {
+                    let currentX = -1.05;
+                    while (currentX < 1.05) {
+                        const thickness = 0.06 + Math.random() * 0.11; const height = 0.32 + Math.random() * 0.24;
+                        if (currentX + thickness > 1.05) break;
+                        const bColor = bookColors[Math.floor(Math.random() * bookColors.length)];
+                        const bookMat = createClayMaterial(bColor, 0.55, 0.05); const book = new THREE.Mesh(new THREE.BoxGeometry(thickness, height, 0.42), bookMat);
+                        book.position.set(currentX + thickness / 2, shelfY + height / 2 + 0.035, 0.02);
+                        if (Math.random() > 0.82) { book.rotation.z = (Math.random() - 0.5) * 0.35; currentX += 0.06; }
+                        book.castShadow = true; group.add(book);
+                        const pageEdge = new THREE.Mesh(new THREE.BoxGeometry(thickness * 0.92, 0.025, 0.4), createClayMaterial(0xf4f0e6, 0.5, 0.02));
+                        pageEdge.position.set(book.position.x, shelfY + height + 0.035 + 0.012, 0.0); pageEdge.rotation.copy(book.rotation); group.add(pageEdge);
+                        currentX += thickness + 0.012;
+                    }
+                });
+                group.position.set(x, 0, z); group.rotation.y = rotY; scene.add(group);
+            },
+            serverRack: (x, z) => {
+                const group = new THREE.Group(); const serverGeo = new THREE.BoxGeometry(1.4, 2.8, 1.4); const serverMat = createClayMaterial(0x15151a, 0.4, 0.6);
+                const mainBody = new THREE.Mesh(serverGeo, serverMat); mainBody.position.y = 1.4; mainBody.castShadow = true; group.add(mainBody);
+                const ledMat1 = createEmissiveMaterial(0x22c55e, 2); const ledMat2 = createEmissiveMaterial(0x3b82f6, 2);
+                for(let ly=0.6; ly<=2.5; ly+=0.3) {
+                    const ledGeo = new THREE.BoxGeometry(1.0, 0.04, 0.02); const led1 = new THREE.Mesh(ledGeo, Math.random() > 0.3 ? ledMat1 : ledMat2);
+                    led1.position.set(0, ly, 0.71); group.add(led1);
+                }
+                group.position.set(x, 0, z); scene.add(group);
+            }
+        };
+
+        function buildEnvironment() {
+            const floorGeo = new THREE.BoxGeometry(31, 0.5, 28); const floorMat = createClayMaterial(colors.floorBase); const floor = new THREE.Mesh(floorGeo, floorMat); floor.position.y = -0.25; floor.receiveShadow = true; scene.add(floor);
+            const wallH = 3.5; const wallT = 0.5;
+            buildProps.wall(31, wallH, wallT, 0, wallH/2, -13.5); buildProps.wall(31, wallH, wallT, 0, wallH/2, 13.5);
+            const leftWall = buildProps.wall(wallT, wallH, 27.5, -15.25, wallH/2, 0); const rightWall = buildProps.wall(wallT, wallH, 27.5, 15.25, wallH/2, 0);
+            leftWall.rotation.set(0, 0, 0); rightWall.rotation.set(0, 0, 0);
+            buildProps.wall(wallT, wallH, 10.25, -5, wallH/2, -8.375); buildProps.wall(wallT, wallH, 10.25, 5, wallH/2, -8.375);  
+            buildProps.wall(wallT, wallH, 10.25, -5, wallH/2, 8.375); buildProps.wall(wallT, wallH, 10.25, 5, wallH/2, 8.375);   
+
+            const corridorWallSegments = [ {w: 4.05, x: -13.225}, {w: 3.8, x: -6.9}, {w: 3.8, x: -3.1}, {w: 3.8, x: 3.1}, {w: 3.8, x: 6.9}, {w: 4.05, x: 13.225} ];
+            corridorWallSegments.forEach(seg => { buildProps.wall(seg.w, wallH, wallT, seg.x, wallH/2, -3.25); buildProps.wall(seg.w, wallH, wallT, seg.x, wallH/2, 3.25); });
+
+            const pillarPositions = [
+                [-15.25, -13.5], [15.25, -13.5], [-15.25, 13.5], [15.25, 13.5], [-15.25, -3.25], [15.25, -3.25], [-15.25, 3.25], [15.25, 3.25],
+                [-5, -13.5], [5, -13.5], [-5, 13.5], [5, 13.5], [-5, -3.25], [5, -3.25], [-5, 3.25], [5, 3.25]
+            ];
+            pillarPositions.forEach(([px, pz]) => {
+                const pillar = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.22, wallH + 0.4, 12), createClayMaterial(colors.metalDark, 0.4, 0.5)); pillar.position.set(px, (wallH + 0.4) / 2, pz); pillar.castShadow = true; pillar.receiveShadow = true; scene.add(pillar);
+                const cap = new THREE.Mesh(new THREE.CylinderGeometry(0.26, 0.26, 0.08, 12), createEmissiveMaterial(colors.trimAccent, 0.2)); cap.position.set(px, wallH + 0.44, pz); scene.add(cap);
+            });
+
+            [-10, 0, 10].forEach(wx => {
+                const frame = new THREE.Mesh(new THREE.BoxGeometry(2.6, 1.6, 0.15), createClayMaterial(colors.trim, 0.5)); frame.position.set(wx, wallH - 1.0, -13.45); scene.add(frame);
+                const glass = new THREE.Mesh(new THREE.BoxGeometry(2.3, 1.3, 0.05), createEmissiveMaterial(colors.glass, 0.6)); glass.position.set(wx, wallH - 1.0, -13.37); scene.add(glass);
+                const mullion = new THREE.Mesh(new THREE.BoxGeometry(0.08, 1.3, 0.08), createClayMaterial(colors.trim)); mullion.position.set(wx, wallH - 1.0, -13.35); scene.add(mullion);
+            });
+
+            const corridorPadGeo = new THREE.BoxGeometry(30, 0.05, 5.5); const corridorPadMat = createClayMaterial(colors.floorRoom, 0.8, 0.05); const corridorPad = new THREE.Mesh(corridorPadGeo, corridorPadMat); corridorPad.position.set(0, 0.025, 0); corridorPad.receiveShadow = true; scene.add(corridorPad);
+
+            const rooms = [
+                {id: 'computer', title: 'دپارتمان برنامه‌نویسی', x: -10, z: -8.375, padColor: colors.padComputer, interactive: true, icon: '💻'},
+                {id: 'meeting', title: 'سالن جلسات', x: 0, z: -8.375, padColor: colors.padMeeting, interactive: true, icon: '🤝'},
+                {id: 'pr', title: 'دفتر مدیر / روابط‌عمومی', x: 10, z: -8.375, padColor: colors.padPR, interactive: true, icon: '📢'},
+                {id: 'library', title: 'کتابخانه و استراحت', x: -10, z: 8.375, padColor: colors.padLibrary, interactive: true, icon: '📚'},
+                {id: 'archive', title: 'بخش بایگانی', x: 0, z: 8.375, padColor: colors.padArchive, interactive: true, icon: '🗄️'},
+                {id: 'tech', title: 'اتاق سرور و شبکه', x: 10, z: 8.375, padColor: colors.padTech, interactive: true, icon: '⚙️'}
+            ];
+
+            rooms.forEach(room => {
+                const frameGeo = new THREE.BoxGeometry(9.6, 0.08, 9.6); const frame = new THREE.Mesh(frameGeo, createClayMaterial(colors.floorRoom, 0.8, 0.05)); frame.position.set(room.x, 0.01, room.z); frame.receiveShadow = true; scene.add(frame);
+                const padSizeX = 9.0; const padSizeZ = 9.0; const padGeo = new THREE.BoxGeometry(padSizeX, 0.06, padSizeZ);
+                const padMat = createClayMaterial(room.padColor, 0.45, 0.15); const baseColor = new THREE.Color(room.padColor); const hoverColor = new THREE.Color(room.padColor).multiplyScalar(1.18); padMat.color = baseColor;
+                const pad = new THREE.Mesh(padGeo, padMat); pad.position.set(room.x, 0.05, room.z); pad.receiveShadow = true; pad.userData = { ...room, baseColor: baseColor, hoverColor: hoverColor }; scene.add(pad);
+                if(room.interactive) interactiveRooms.push(pad);
+
+                const lightIntensity = room.interactive ? 2.0 : 1.15;
+                const rLight = new THREE.PointLight(room.padColor, lightIntensity, 14, 2); rLight.position.set(room.x, wallH - 0.5, room.z); scene.add(rLight);
+                if (room.interactive) {
+                    const spot = new THREE.SpotLight(0xfff4e0, 2.6, 18, Math.PI / 5.2, 0.68, 1.7); spot.position.set(room.x, wallH + 1.8, room.z); spot.target.position.set(room.x, 0, room.z); spot.castShadow = true; spot.shadow.mapSize.width = 2048; spot.shadow.mapSize.height = 2048; scene.add(spot, spot.target);
+                }
+                roomLights[room.id] = { light: rLight, baseInt: lightIntensity, hoverInt: lightIntensity * 2.3 };
+
+                createUILabel(room.icon + " " + room.title, room.x, wallH + 1.2, room.z - 4.5, room.interactive);
+                populateRoom(room.id, room.x, room.z);
+            });
+
+            spawnCharacters();
+        }
+
+        function createUILabel(text, x, y, z, isInteractive) {
+            const canvas = document.createElement('canvas'); const ctx = canvas.getContext('2d'); canvas.width = 1300; canvas.height = 280;
+            ctx.fillStyle = 'rgba(10, 10, 15, 0.98)'; ctx.beginPath(); ctx.roundRect(20, 20, canvas.width-40, canvas.height-40, 100); ctx.fill();
+            ctx.strokeStyle = isInteractive ? '#f59e0b' : '#444455'; ctx.lineWidth = 16; ctx.stroke();
+            ctx.font = 'bold 110px Vazirmatn, sans-serif'; ctx.fillStyle = isInteractive ? '#ffffff' : '#bbbbcc'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(text, canvas.width / 2, canvas.height / 2 + 10);
+            const texture = new THREE.CanvasTexture(canvas); texture.generateMipmaps = false; texture.minFilter = THREE.LinearFilter; texture.magFilter = THREE.LinearFilter; texture.needsUpdate = true;
+            const spriteMat = new THREE.SpriteMaterial({ map: texture, transparent: true, fog: false, depthTest: false });
+            const sprite = new THREE.Sprite(spriteMat); sprite.position.set(x, y, z); sprite.scale.set(5.0, 1.1, 1); sprite.renderOrder = 999; scene.add(sprite);
+        }
+
+        function populateRoom(id, cx, cz) {
+            switch(id) {
+                case 'computer': 
+                    buildProps.table(cx, cz, 5, 2);
+                    buildProps.monitor(cx - 1.5, 0.8, cz - 0.2); buildProps.keyboard(cx - 1.5, 0.8, cz + 0.4); buildProps.chair(cx - 1.5, cz + 1.2, Math.PI);
+                    buildProps.monitor(cx + 1.5, 0.8, cz - 0.2); buildProps.keyboard(cx + 1.5, 0.8, cz + 0.4); buildProps.chair(cx + 1.5, cz + 1.2, Math.PI);
+                    break;
+                case 'meeting': 
+                    buildProps.table(cx, cz, 4.5, 2.5);
+                    for(let i=-1.5; i<=1.5; i+=1.5) { buildProps.chair(cx+i, cz-1.8, 0); buildProps.chair(cx+i, cz+1.8, Math.PI); if(i !== 0) buildProps.laptop(cx+i, 0.8, cz+0.6, Math.PI); }
+                    buildProps.plant(cx - 3.5, cz - 3.5);
+                    const wallScreen = new THREE.Mesh(new THREE.BoxGeometry(4.5, 2.2, 0.1), createEmissiveMaterial(0xffffff, 1.2)); wallScreen.position.set(cx, 1.8, cz - 4.7); scene.add(wallScreen);
+                    break;
+                case 'pr': 
+                    buildProps.table(cx - 1.5, cz, 2.5, 1.8); buildProps.laptop(cx - 1.5, 0.8, cz - 0.3); buildProps.chair(cx - 1.5, cz + 1.2, Math.PI);
+                    const sofa = new THREE.Mesh(new THREE.BoxGeometry(2.8, 0.7, 1.4), createClayMaterial(0x3b82f6)); sofa.position.set(cx + 2.5, 0.35, cz); sofa.castShadow = true; scene.add(sofa);
+                    break;
+                case 'library': 
+                    buildProps.bookshelf(cx - 2.5, cz + 3.3, Math.PI); buildProps.bookshelf(cx + 1.5, cz + 3.3, Math.PI); buildProps.table(cx + 1, cz + 1.0, 2.5, 1.5); buildProps.chair(cx + 1, cz + 2.2, Math.PI);
+                    break;
+                case 'archive': 
+                    const cabMat = createClayMaterial(0x3f3f4e);
+                    for(let i=-3; i<=3; i+=1.5) { const cab = new THREE.Mesh(new THREE.BoxGeometry(1.2, 2.5, 1.5), cabMat); cab.position.set(cx + i, 1.25, cz + 3.0); cab.castShadow = true; scene.add(cab); }
+                    buildProps.table(cx, cz + 0.6, 2.2, 1.1); buildProps.chair(cx, cz + 1.8, Math.PI);
+                    break;
+                case 'tech': 
+                    buildProps.serverRack(cx - 2.5, cz + 3.8); buildProps.serverRack(cx, cz + 3.8); buildProps.serverRack(cx + 2.5, cz + 3.8);
+                    buildProps.table(cx, cz + 1.5, 2.5, 1.2); buildProps.monitor(cx, 0.8, cz + 1.2); buildProps.chair(cx, cz + 2.5, Math.PI);
+                    break;
+            }
+        }
+
+        // FIX 1: Added safeX to route characters around tables/shelves.
+        const ROOMS = {
+            computer: { cx: -10, cz: -8.375, top: true, bounds: { x: [-13, -7], z: [-11.8, -6.2] }, safeX: [-12.2, -7.8] },
+            meeting:  { cx: 0,   cz: -8.375, top: true, bounds: { x: [-4, 4],   z: [-11.8, -6.2] }, safeX: [-3.2, 3.2] },
+            pr:       { cx: 10,  cz: -8.375, top: true, bounds: { x: [7, 13],  z: [-11.8, -6.2] }, safeX: [10.5] },
+            library:  { cx: -10, cz: 8.375,  top: false, bounds: { x: [-13, -7], z: [6.2, 10.0] }, safeX: [-10.5] },
+            archive:  { cx: 0,   cz: 8.375,  top: false, bounds: { x: [-4, 4],   z: [6.2, 9.6] }, safeX: [2.5, -2.5] },
+            tech:     { cx: 10,  cz: 8.375,  top: false, bounds: { x: [7, 13],  z: [6.2, 9.0] }, safeX: [8.8, 11.2] }
+        };
+
+        const SIT_SPOTS = {
+            computer: [ { x: -11.5, z: -7.175, facing: Math.PI, action: 'typing' }, { x: -8.5,  z: -7.175, facing: Math.PI, action: 'typing' } ],
+            meeting: [
+                { x: -1.5, z: -10.175, facing: 0, action: 'sitting', occupiedBy: null }, { x: 0, z: -10.175, facing: 0, action: 'sitting', occupiedBy: null },
+                { x: 1.5, z: -10.175, facing: 0, action: 'sitting', occupiedBy: null }, { x: -1.5, z: -6.575, facing: Math.PI, action: 'sitting', occupiedBy: null },
+                { x: 0, z: -6.575, facing: Math.PI, action: 'sitting', occupiedBy: null }, { x: 1.5, z: -6.575, facing: Math.PI, action: 'sitting', occupiedBy: null }
+            ],
+            pr: [ { x: 8.5, z: -7.175, facing: Math.PI, action: 'typing' } ],
+            library: [ { x: -9, z: 10.575, facing: Math.PI, action: 'reading' } ],
+            archive: [ { x: 0, z: 10.175, facing: Math.PI, action: 'searching' } ],
+            tech: [ { x: 10, z: 10.875, facing: Math.PI, action: 'typing' } ]
+        };
+
+        const STAND_SPOTS = {
+            computer: [{ x: -10, z: -9.8 }], meeting: [{ x: -3.2, z: -6.5 }, { x: 0, z: -11.5 }], pr: [{ x: 12.3, z: -6.8, action: 'talking' }, { x: 5.5, z: -8.375 }],
+            library: [{ x: -10.5, z: 10.9, action: 'reading' }, { x: -8, z: 10.9 }], archive: [{ x: -2, z: 10.3, action: 'searching' }, { x: 2, z: 10.3, action: 'searching' }], tech: [{ x: 10, z: 11.0, action: 'fixing' }]
+        };
+
+        function doorPoint(id, corridorSide) {
+            const r = ROOMS[id];
+            const z = r.top ? (corridorSide ? -1.2 : -3.7) : (corridorSide ? 1.2 : 3.7);
+            return new THREE.Vector3(r.cx, 0, z);
+        }
+
+        function randomPointInRoom(id) {
+            const r = ROOMS[id];
+            const x = r.bounds.x[0] + Math.random() * (r.bounds.x[1] - r.bounds.x[0]); const z = r.bounds.z[0] + Math.random() * (r.bounds.z[1] - r.bounds.z[0]);
+            return { pos: new THREE.Vector3(x, 0, z), facing: null, action: 'idle', isSit: false };
+        }
+
+        function pickDestination(currentRoom) {
+            const roomIds = Object.keys(ROOMS); let targetRoom = currentRoom;
+            if (Math.random() > 0.55) { const others = roomIds.filter(r => r !== currentRoom); targetRoom = others[Math.floor(Math.random() * others.length)]; }
+            const roll = Math.random(); let spot;
+            if (roll < 0.4 && SIT_SPOTS[targetRoom] && SIT_SPOTS[targetRoom].length && targetRoom !== 'meeting') {
+                const s = SIT_SPOTS[targetRoom][Math.floor(Math.random() * SIT_SPOTS[targetRoom].length)]; spot = { pos: new THREE.Vector3(s.x, 0, s.z), facing: s.facing, action: s.action, isSit: true };
+            } else if (roll < 0.7 && STAND_SPOTS[targetRoom] && STAND_SPOTS[targetRoom].length) {
+                const s = STAND_SPOTS[targetRoom][Math.floor(Math.random() * STAND_SPOTS[targetRoom].length)]; spot = { pos: new THREE.Vector3(s.x, 0, s.z), facing: null, action: s.action || (Math.random() > 0.5 ? 'talking' : 'idle'), isSit: false };
+            } else { spot = randomPointInRoom(targetRoom); }
+            return { room: targetRoom, ...spot };
+        }
+
+        function getSafeRoomPath(roomId, p1, p2) {
+            const r = ROOMS[roomId];
+            if (!r || !r.safeX) return [];
+            let path = [];
+            if (Math.abs(p1.z - p2.z) > 1.5) {
+                let bestSafeX = r.safeX[0]; let minDist = Infinity;
+                r.safeX.forEach(sx => {
+                    let d = Math.abs(p1.x - sx) + Math.abs(p2.x - sx);
+                    if (d < minDist) { minDist = d; bestSafeX = sx; }
+                });
+                path.push(new THREE.Vector3(bestSafeX, 0, p1.z));
+                path.push(new THREE.Vector3(bestSafeX, 0, p2.z));
+            } else if (Math.abs(p1.x - p2.x) > 2.0 && Math.abs(p1.z - r.cz) < 2.0) {
+                let doorZ = r.top ? -4.5 : 4.5; 
+                path.push(new THREE.Vector3(p1.x, 0, doorZ));
+                path.push(new THREE.Vector3(p2.x, 0, doorZ));
+            }
+            return path;
+        }
+
+        // FIX 1: Completely rebuilt path logic to safely route characters using the safe axes.
+        function buildPath(fromRoom, toRoom, fromPos, toPos) {
+            let path = [];
+            if (fromRoom === toRoom) {
+                path.push(...getSafeRoomPath(fromRoom, fromPos, toPos));
+                path.push(toPos.clone());
+                return path;
+            }
+            let dpFromIn = doorPoint(fromRoom, false);
+            let dpFromOut = doorPoint(fromRoom, true);
+            let dpToOut = doorPoint(toRoom, true);
+            let dpToIn = doorPoint(toRoom, false);
+
+            path.push(...getSafeRoomPath(fromRoom, fromPos, dpFromIn));
+            path.push(dpFromIn);
+            path.push(dpFromOut);
+            
+            // Corridor navigation
+            path.push(new THREE.Vector3(dpFromOut.x, 0, 0));
+            path.push(new THREE.Vector3(dpToOut.x, 0, 0));
+            
+            path.push(dpToOut);
+            path.push(dpToIn);
+            path.push(...getSafeRoomPath(toRoom, dpToIn, toPos));
+            path.push(toPos.clone());
+            return path;
+        }
+
+        function startWalkingTo(char, dest) {
+            char.path = buildPath(char.room, dest.room, char.mesh.position, dest.pos);
+            char.pathIndex = 0; char.state = 'walking'; char.pendingRoom = dest.room;
+            char.pendingFacing = dest.facing; char.pendingAction = dest.action; char.pendingSit = dest.isSit;
+            char.head.rotation.set(0, 0, 0); char.body.rotation.set(0, 0, 0);
+        }
+
+        function syncGuestCharacters() {
+            let debaters = characters.filter(c => c.isDebater);
+            let numNeeded = appState.settings.numGuests;
+
+            if (debaters.length < numNeeded) {
+                let toAdd = numNeeded - debaters.length; let availableChars = characters.filter(c => !c.isDebater);
+                for (let i = 0; i < toAdd && i < availableChars.length; i++) {
+                    let char = availableChars[i]; char.isDebater = true;
+                    let freeSpot = SIT_SPOTS.meeting.find(s => !s.occupiedBy);
+                    if (freeSpot) {
+                        freeSpot.occupiedBy = char; char.assignedSpot = freeSpot;
+                        startWalkingTo(char, { room: 'meeting', pos: new THREE.Vector3(freeSpot.x, 0, freeSpot.z), facing: freeSpot.facing, action: freeSpot.action, isSit: true });
+                    }
+                }
+            } else if (debaters.length > numNeeded) {
+                let toRemove = debaters.length - numNeeded;
+                for (let i = 0; i < toRemove; i++) {
+                    let char = debaters[i]; char.isDebater = false;
+                    if (char.assignedSpot) { char.assignedSpot.occupiedBy = null; char.assignedSpot = null; }
+                    char.waitTimer = 0; 
+                }
+            }
+        }
+
+        function createCharacter(roomId, x, z, color, spot) {
+            const group = new THREE.Group();
+            const bodyMat = createClayMaterial(color); const body = new THREE.Mesh(new THREE.CylinderGeometry(0.25, 0.3, 0.7, 24), bodyMat); body.position.y = 0.35; body.castShadow = true;
+            const headMat = createClayMaterial(colors.skin); const head = new THREE.Mesh(new THREE.SphereGeometry(0.22, 24, 24), headMat); head.position.y = 0.9; head.castShadow = true;
+            group.add(body, head); group.position.set(x, 0, z); scene.add(group);
+            if (spot.facing !== null && spot.facing !== undefined) group.rotation.y = spot.facing;
+            const char = {
+                mesh: group, head: head, body: body, room: roomId, state: spot.isSit ? 'sitting' : 'idle', action: spot.action || 'idle',
+                path: [], pathIndex: 0, speed: 1.4 + Math.random() * 0.6, waitTimer: 2 + Math.random() * 6, timeOffset: Math.random() * 100, isDebater: false, assignedSpot: null
+            };
+            characters.push(char); return char;
+        }
+
+        function spawnCharacters() {
+            const seeds = [
+                { room: 'computer', x: -11.5, z: -7.175, color: 0x3b82f6, facing: Math.PI, action: 'typing',   isSit: true },
+                { room: 'computer', x: -8.5,  z: -7.175, color: 0xef4444, facing: Math.PI, action: 'typing',   isSit: true },
+                { room: 'library',  x: -9,    z: 9.5,     color: 0x8b5cf6, facing: 0,       action: 'idle',     isSit: false },
+                { room: 'library',  x: -11,   z: 9.5,     color: 0x10b981, facing: Math.PI, action: 'idle',     isSit: false },
+                { room: 'pr',       x: 8.5,   z: -7.175,  color: 0xec4899, facing: Math.PI, action: 'typing',   isSit: true },
+                { room: 'pr',       x: 12.3,  z: -6.8,    color: 0xffffff, facing: null,    action: 'talking',  isSit: false },
+                { room: 'library',  x: -9,    z: 10.575,  color: 0xf59e0b, facing: Math.PI, action: 'reading',  isSit: true },
+                { room: 'library',  x: -10.5, z: 10.9,    color: 0x64748b, facing: null,    action: 'idle',     isSit: false },
+                { room: 'archive',  x: 0,     z: 10.175,  color: 0x14b8a6, facing: Math.PI, action: 'searching',isSit: true },
+                { room: 'tech',     x: 10,    z: 10.875,  color: 0xd946ef, facing: Math.PI, action: 'typing',   isSit: true }
+            ];
+            seeds.forEach(s => createCharacter(s.room, s.x, s.z, s.color, { facing: s.facing, action: s.action, isSit: s.isSit }));
+        }
+
+        function animateCharacters(elapsedTime, delta) {
+            characters.forEach(char => {
+                const t = elapsedTime + char.timeOffset;
+                char.body.scale.y = 1 + Math.sin(t * 2.5) * 0.04; 
+                char.head.position.y = 0.9 + Math.sin(t * 2.5) * 0.02;
+
+                if (char.state === 'walking') {
+                    const target = char.path[char.pathIndex]; const pos = char.mesh.position;
+                    const dx = target.x - pos.x, dz = target.z - pos.z; const dist = Math.sqrt(dx * dx + dz * dz);
+                    if (dist < 0.08) {
+                        char.pathIndex++;
+                        if (char.pathIndex >= char.path.length) {
+                            char.room = char.pendingRoom;
+                            if (char.pendingSit) { char.state = 'sitting'; char.mesh.rotation.y = char.pendingFacing; char.action = char.pendingAction; char.waitTimer = 8 + Math.random() * 14; } 
+                            else { char.state = 'idle'; char.action = char.pendingAction || 'idle'; char.waitTimer = 3 + Math.random() * 6; }
+                        }
+                    } else {
+                        const step = Math.min(dist, char.speed * delta);
+                        pos.x += (dx / dist) * step; pos.z += (dz / dist) * step;
+                        const targetAngle = Math.atan2(dx, dz);
+                        let angleDiff = targetAngle - char.mesh.rotation.y;
+                        while (angleDiff > Math.PI) angleDiff -= Math.PI * 2; while (angleDiff < -Math.PI) angleDiff += Math.PI * 2;
+                        char.mesh.rotation.y += angleDiff * Math.min(1, delta * 6); char.body.rotation.x = Math.abs(Math.sin(t * 8)) * 0.06;
+                    }
+                } else {
+                    char.waitTimer -= delta;
+                    switch (char.action) {
+                        case 'typing': char.head.rotation.y = Math.sin(t * 6) * 0.15; char.head.rotation.x = 0.2 + Math.sin(t * 10) * 0.08; break;
+                        case 'sitting': char.head.rotation.x = Math.sin(t * 1.5) * 0.05; break;
+                        case 'talking': char.head.rotation.y = Math.sin(t * 4) * 0.25; char.head.rotation.z = Math.sin(t * 5) * 0.08; break;
+                        case 'reading': char.head.rotation.x = Math.sin(t * 1.2) * 0.2 - 0.15; break;
+                        case 'searching': char.head.rotation.y = Math.sin(t * 1.5) * 0.3; char.head.rotation.x = 0.15; break;
+                        case 'fixing': char.body.rotation.x = Math.abs(Math.sin(t * 3)) * 0.1; char.head.rotation.x = 0.3; break;
+                        default: char.head.rotation.y = Math.sin(t * 0.8) * 0.3; char.body.rotation.x = 0;
+                    }
+                    if (char.waitTimer <= 0) {
+                        if (!char.isDebater) { startWalkingTo(char, pickDestination(char.room)); } 
+                        else { char.waitTimer = 10; }
+                    }
+                }
+            });
+        }
+
+        let hoveredRoomId = null;
+
+        function onMouseMove(event) {
+            if (event.target.tagName !== 'CANVAS') {
+                if (hoveredRoomId) {
+                    interactiveRooms.forEach(room => { room.material.color.copy(room.userData.baseColor); if(roomLights[room.userData.id]) { roomLights[room.userData.id].light.intensity = roomLights[room.userData.id].baseInt; } });
+                    document.body.style.cursor = 'default'; hoveredRoomId = null;
+                }
+                return;
+            }
+            mouse.x = (event.clientX / window.innerWidth) * 2 - 1; mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+            raycaster.setFromCamera(mouse, camera); const intersects = raycaster.intersectObjects(interactiveRooms);
+
+            interactiveRooms.forEach(room => { room.material.color.copy(room.userData.baseColor); if(roomLights[room.userData.id]) { roomLights[room.userData.id].light.intensity = roomLights[room.userData.id].baseInt; } });
+            document.body.style.cursor = 'default'; hoveredRoomId = null;
+
+            if (intersects.length > 0) {
+                const object = intersects[0].object; object.material.color.copy(object.userData.hoverColor);
+                if(roomLights[object.userData.id]) { roomLights[object.userData.id].light.intensity = roomLights[object.userData.id].hoverInt; }
+                document.body.style.cursor = 'pointer'; hoveredRoomId = object.userData.id;
+            }
+        }
+
+        function onClick(event) {
+            if (event.target.tagName !== 'CANVAS') return;
+            if (hoveredRoomId) {
+                const roomObj = interactiveRooms.find(r => r.userData.id === hoveredRoomId);
+                if(roomObj) {
+                    openPanel(roomObj.userData);
+                    const originalColor = roomObj.material.color.clone(); roomObj.material.color.setHex(0xffffff);
+                    setTimeout(() => { roomObj.material.color.copy(originalColor); }, 150);
+                }
+            }
+        }
+
+        const themeStyles = {
+            meeting: 'bg-amber-500/20 text-amber-400 border-amber-500/50 shadow-[0_0_20px_rgba(245,158,11,0.4)]',
+            pr: 'bg-pink-500/20 text-pink-400 border-pink-500/50 shadow-[0_0_20px_rgba(236,72,153,0.4)]',
+            tech: 'bg-green-500/20 text-green-400 border-green-500/50 shadow-[0_0_20px_rgba(34,197,94,0.4)]',
+            library: 'bg-purple-500/20 text-purple-400 border-purple-500/50 shadow-[0_0_20px_rgba(168,85,247,0.4)]',
+            computer: 'bg-blue-500/20 text-blue-400 border-blue-500/50 shadow-[0_0_20px_rgba(59,130,246,0.4)]',
+            archive: 'bg-cyan-500/20 text-cyan-400 border-cyan-500/50 shadow-[0_0_20px_rgba(6,182,212,0.4)]'
+        };
+
+        function openPanel(roomData) {
+            document.getElementById('panel-title').innerText = roomData.title; document.getElementById('panel-icon').innerText = roomData.icon;
+            let iconEl = document.getElementById('panel-icon'); iconEl.className = 'w-14 h-14 rounded-2xl flex items-center justify-center text-3xl border';
+            if(themeStyles[roomData.id]) { const classes = themeStyles[roomData.id].split(' '); classes.forEach(c => iconEl.classList.add(c)); }
+            document.querySelectorAll('.panel-section').forEach(el => el.classList.add('hidden'));
+            let section = document.getElementById(`panel-${roomData.id}`); if(section) section.classList.remove('hidden');
+            document.getElementById('side-panel').classList.add('open');
+        }
+
+        function closePanel() { document.getElementById('side-panel').classList.remove('open'); }
+
+        // FIX 2: onWindowResize updated for PerspectiveCamera format
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            const delta = Math.min(clock.getDelta(), 0.1); const elapsedTime = clock.elapsedTime;
+            controls.update(); animateCharacters(elapsedTime, delta); renderer.render(scene, camera);
+        }
+    </script>
+</body>
+</html>
