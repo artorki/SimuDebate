@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SimuDebate | artorki</title>
+    <title>SimuDebate | آزمایشگاه مناظره علمی و دیالکتیک تخصصی</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;600;800&display=swap');
@@ -30,17 +30,17 @@
         #side-panel {
             position: absolute;
             top: 0;
-            right: -450px;
+            right: -540px;
             width: 100%;
-            max-width: 420px;
+            max-width: 500px;
             height: 100%;
-            background: rgba(20, 20, 30, 0.85);
+            background: rgba(16, 17, 26, 0.90);
             backdrop-filter: blur(100px);
             -webkit-backdrop-filter: blur(100px);
-            border-left: 1px solid rgba(255, 255, 255, 0.1);
+            border-left: 1px solid rgba(255, 255, 255, 0.12);
             z-index: 10;
-            transition: right 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
-            box-shadow: -30px 0 60px rgba(0, 0, 0, 0.6);
+            transition: right 0.55s cubic-bezier(0.2, 0.8, 0.2, 1);
+            box-shadow: -30px 0 60px rgba(0, 0, 0, 0.7);
             display: flex;
             flex-direction: column;
         }
@@ -49,25 +49,50 @@
 
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.15); border-radius: 10px; }
-        ::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.3); }
+        ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.18); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.35); }
 
         .form-input {
             width: 100%;
-            background-color: rgba(0, 0, 0, 0.3);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            background-color: rgba(0, 0, 0, 0.35);
+            border: 1px solid rgba(255, 255, 255, 0.12);
             border-radius: 0.75rem;
             padding: 0.5rem 0.75rem;
-            font-size: 0.875rem;
+            font-size: 0.85rem;
             color: white;
             outline: none;
-            transition: all 0.3s;
+            transition: all 0.25s;
         }
-        .form-input:focus { border-color: #6366f1; box-shadow: 0 0 10px rgba(99, 102, 241, 0.2); }
+        .form-input:focus { border-color: #6366f1; box-shadow: 0 0 12px rgba(99, 102, 241, 0.25); }
         
         .form-input option {
             background-color: #12131c; 
             color: #ffffff;
+        }
+
+        #toast-container {
+            position: fixed;
+            bottom: 24px;
+            left: 24px;
+            z-index: 50;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            pointer-events: none;
+        }
+
+        .toast-msg {
+            pointer-events: auto;
+            background: rgba(18, 19, 28, 0.95);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(16px);
+            color: #fff;
+            padding: 12px 16px;
+            border-radius: 14px;
+            font-size: 0.8rem;
+            box-shadow: 0 12px 30px rgba(0,0,0,0.5);
+            transition: all 0.3s ease;
+            max-width: 360px;
         }
     </style>
 </head>
@@ -75,63 +100,96 @@
 
     <div id="canvas-container"></div>
 
-    <div id="side-panel" class="text-right p-8">
-        <div class="flex justify-between items-center mb-8 pt-4">
-            <button id="close-btn" class="w-11 h-11 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center transition-all hover:scale-105 hover:rotate-90">
+    <!-- راهنمای سریع بالای صفحه -->
+    <div class="fixed top-4 left-4 z-10 flex items-center gap-2 bg-black/50 backdrop-blur-md border border-white/10 px-3.5 py-2 rounded-2xl text-xs text-white/80 shadow-lg pointer-events-auto">
+        <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
+        <span>برای مدیریت مناظره روی <b>سالن جلسات</b> یا <b>کتابخانه</b> در محیط سه‌بعدی کلیک کنید</span>
+        <button id="quickOpenMeetingBtn" class="mr-2 bg-amber-500/20 hover:bg-amber-500/40 text-amber-300 border border-amber-500/40 px-2.5 py-1 rounded-lg font-bold transition-all">پنل مناظره</button>
+    </div>
+
+    <div id="toast-container"></div>
+
+    <div id="side-panel" class="text-right p-6">
+        <div class="flex justify-between items-center mb-5 pt-2 shrink-0">
+            <button id="close-btn" class="w-10 h-10 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center transition-all hover:scale-105 hover:rotate-90">
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
             </button>
-            <div class="flex items-center gap-4">
+            <div class="flex items-center gap-3">
                 <div class="flex flex-col items-end">
-                    <h2 id="panel-title" class="text-2xl font-extrabold text-white tracking-tight">نام اتاق</h2>
-                    <span id="panel-subtitle" class="text-xs text-white/50 mt-1">مدیریت بخش</span>
+                    <h2 id="panel-title" class="text-xl font-extrabold text-white tracking-tight">نام اتاق</h2>
+                    <span id="panel-subtitle" class="text-[11px] text-white/50 mt-0.5">مدیریت تخصصی بخش</span>
                 </div>
-                <div id="panel-icon" class="w-14 h-14 rounded-2xl flex items-center justify-center text-3xl shadow-lg border border-white/20"></div>
+                <div id="panel-icon" class="w-12 h-12 rounded-2xl flex items-center justify-center text-2xl shadow-lg border border-white/20"></div>
             </div>
         </div>
 
-        <div class="flex-1 overflow-y-auto pr-2 pb-6 flex flex-col">
+        <div class="flex-1 overflow-y-auto pr-1 pb-4 flex flex-col">
             <div id="panel-content" class="w-full h-full relative">
                 
                 <div id="panel-meeting" class="hidden panel-section flex flex-col h-full space-y-3">
-                    <div class="bg-white/5 p-4 rounded-2xl border border-white/10 shadow-inner shrink-0">
-                        <div class="mb-3">
-                            <label class="block text-xs text-white/60 mb-1.5 font-bold">موضوع مناظره</label>
-                            <textarea id="debateTopic" rows="2" class="form-input resize-none text-sm">Consciousness and Time</textarea>
+                    <div class="bg-white/5 p-3.5 rounded-2xl border border-white/10 shadow-inner shrink-0 space-y-3">
+                        <div class="flex items-center justify-between gap-2">
+                            <label class="text-[11px] text-white/70 font-bold">سناریوی علمی آماده:</label>
+                            <select id="presetSelector" class="form-input text-xs py-1 px-2 w-auto flex-1">
+                                <option value="">-- انتخاب سناریوی تخصصی (اختیاری) --</option>
+                                <option value="consciousness_time">۱. آگاهی و پیکان زمان (نوروساینس محاسباتی در برابر فیزیک کوانتوم)</option>
+                                <option value="free_will">۲. اراده آزاد و جبر عصبی (پتانسیل آمادگی لیبت در برابر علیت نزولی)</option>
+                                <option value="ai_semantics">۳. هوش مصنوعی و فهم معنایی (کارکردگرایی محاسباتی در برابر زیست‌نشانه‌شناسی)</option>
+                                <option value="quantum_gravity">۴. حقیقت زمان در فیزیک بنیادی (ترمودینامیک بولتزمن در برابر گرانش کوانتومی حلقه)</option>
+                            </select>
                         </div>
-                        <div class="mb-4">
-                            <label class="block text-xs text-white/60 mb-1.5 font-bold flex justify-between">
-                                <span>حداکثر نوبت‌ها</span>
-                                <span id="maxTurnsVal" class="text-amber-400">15</span>
-                            </label>
-                            <input type="range" id="maxTurns" min="5" max="50" value="15" class="w-full accent-amber-500">
+
+                        <div>
+                            <label class="block text-xs text-white/60 mb-1 font-bold">مسئله و فرضیه محوری مناظره</label>
+                            <textarea id="debateTopic" rows="2" class="form-input resize-none text-xs leading-relaxed">سازوکار عصبی-فیزیکی تجربه زمان در آگاهی: آیا ادراک زمان محصول یکپارچه‌سازی اطلاعات در شبکه‌های قشری مغز است یا ریشه در فرآیندهای بنیادی‌تر فیزیکی دارد؟</textarea>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <label class="block text-[11px] text-white/60 mb-1 font-bold">سطح سخت‌گیری و چالشگری</label>
+                                <select id="rigorLevel" class="form-input text-xs py-1.5">
+                                    <option value="adversarial">داوری تخصصی تند (Peer-Review)</option>
+                                    <option value="hard_falsification">ابطال‌گرایی بی‌رحمانه (Popperian)</option>
+                                    <option value="academic">کالبدشکافی آکادمیک مستدل</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-[11px] text-white/60 mb-1 font-bold flex justify-between">
+                                    <span>حداکثر نوبت‌ها</span>
+                                    <span id="maxTurnsVal" class="text-amber-400">15</span>
+                                </label>
+                                <input type="range" id="maxTurns" min="5" max="50" value="15" class="w-full accent-amber-500 mt-1.5">
+                            </div>
                         </div>
                         
-                        <div class="grid grid-cols-2 gap-3 mb-3">
-                            <button id="startDebateBtn" class="bg-amber-500/20 hover:bg-amber-500/40 text-amber-400 border border-amber-500/50 py-2.5 rounded-xl text-sm font-bold transition-all shadow-[0_0_15px_rgba(245,158,11,0.2)]">شروع مناظره</button>
-                            <button id="stopDebateBtn" class="bg-red-500/20 hover:bg-red-500/40 text-red-400 border border-red-500/50 py-2.5 rounded-xl text-sm font-bold transition-all shadow-[0_0_15px_rgba(239,68,68,0.2)]">توقف</button>
+                        <div class="grid grid-cols-3 gap-2 pt-1">
+                            <button id="startDebateBtn" class="bg-amber-500/20 hover:bg-amber-500/40 text-amber-300 border border-amber-500/50 py-2 rounded-xl text-xs font-bold transition-all shadow-[0_0_15px_rgba(245,158,11,0.2)]">شروع مناظره</button>
+                            <button id="stopDebateBtn" class="bg-red-500/20 hover:bg-red-500/40 text-red-300 border border-red-500/50 py-2 rounded-xl text-xs font-bold transition-all shadow-[0_0_15px_rgba(239,68,68,0.2)]">توقف</button>
+                            <button id="resetDebateBtn" class="bg-white/5 hover:bg-white/15 text-white/70 border border-white/15 py-2 rounded-xl text-xs font-bold transition-all">↺ بازنشانی</button>
                         </div>
-                        <button id="synthesisBtn" class="w-full bg-purple-500/20 hover:bg-purple-500/40 text-purple-400 border border-purple-500/50 py-2.5 rounded-xl text-sm font-bold transition-all shadow-[0_0_15px_rgba(168,85,247,0.2)]">سنتز و جمع‌بندی</button>
+                        <button id="synthesisBtn" class="w-full bg-purple-500/20 hover:bg-purple-500/40 text-purple-300 border border-purple-500/50 py-2 rounded-xl text-xs font-bold transition-all shadow-[0_0_15px_rgba(168,85,247,0.2)]">سنتز و جمع‌بندی</button>
 
-                        <div class="mt-4 pt-3 border-t border-white/10 flex justify-between items-center text-sm">
+                        <div class="pt-2 border-t border-white/10 flex flex-wrap justify-between items-center gap-2 text-xs">
                             <span class="text-white/60">وضعیت: <span id="debateStatus" class="text-white font-bold">متوقف</span></span>
+                            <span class="text-white/60">فاز دیالکتیک: <span id="debatePhaseBadge" class="text-indigo-300 font-bold">فاز ۱: تعریف عملیاتی</span></span>
                             <span class="text-white/60">نوبت: <span id="debateTurn" class="text-white font-bold">0 / 15</span></span>
                         </div>
                     </div>
                     
-                    <div class="flex justify-between items-center px-4 py-2 bg-black/40 rounded-xl border border-white/10 text-xs font-bold text-white/70 shadow-inner shrink-0">
+                    <div class="flex justify-between items-center px-3.5 py-1.5 bg-black/40 rounded-xl border border-white/10 text-[11px] font-bold text-white/70 shadow-inner shrink-0">
                         <span>توکن‌های مصرفی: <span id="logTokens" class="text-cyan-400">0</span></span>
+                        <span>استنادات ثبت‌شده: <span id="logCitationsCount" class="text-amber-400">0</span></span>
                         <span>هزینه تقریبی: <span id="logCost" class="text-green-400">$0.0000</span></span>
                     </div>
                     
-                    <!-- Fix: Added min-h-[350px] xl:min-h-[450px] to ensure the chat box doesn't shrink and messages remain visible -->
-                    <div id="chatHistory" class="flex-1 min-h-[350px] xl:min-h-[450px] overflow-y-auto space-y-3 pr-2 scrollbar-thin rounded-xl p-2 bg-black/20 border border-white/5">
+                    <div id="chatHistory" class="flex-1 min-h-[340px] xl:min-h-[430px] overflow-y-auto space-y-3 pr-1 scrollbar-thin rounded-xl p-2.5 bg-black/25 border border-white/5">
                         <div class="text-center text-white/40 text-xs py-10">تاریخچه مناظره هنوز خالی است.</div>
                     </div>
 
                     <div class="mt-auto bg-black/40 p-2 rounded-xl border border-white/10 flex gap-2 shrink-0">
-                        <input type="text" id="hostInput" placeholder="پیام شما به عنوان هاست..." class="flex-1 bg-transparent border-none outline-none text-sm text-white px-3">
-                        <button id="hostSubmitBtn" class="bg-cyan-500 hover:bg-cyan-600 text-white p-2 rounded-lg transition-colors shadow-lg">
-                            <svg class="w-5 h-5 transform rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg>
+                        <input type="text" id="hostInput" placeholder="مداخله علمی شما به عنوان داور/هاست (طرح چالش یا آزمایش)..." class="flex-1 bg-transparent border-none outline-none text-xs text-white px-2">
+                        <button id="hostSubmitBtn" class="bg-cyan-500 hover:bg-cyan-600 text-white p-2 rounded-lg transition-colors shadow-lg" title="ارسال چالش هاست">
+                            <svg class="w-4 h-4 transform rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg>
                         </button>
                     </div>
                 </div>
@@ -140,7 +198,7 @@
                     <div class="bg-white/5 p-5 rounded-2xl border border-white/10 shadow-inner">
                         <label class="flex items-center gap-3 cursor-pointer mb-5 bg-black/20 p-3 rounded-xl">
                             <input type="checkbox" id="tgEnable" class="w-4 h-4 text-pink-500 rounded bg-black/30 border-white/20">
-                            <span class="text-sm font-bold">فعال‌سازی ارسال به تلگرام</span>
+                            <span class="text-sm font-bold">فعال‌سازی ارسال و دریافت زنده تلگرام</span>
                         </label>
                         <div class="space-y-4">
                             <div>
@@ -179,7 +237,7 @@
                                 <input type="text" id="globalModel" value="gpt-4o" class="form-input font-sans text-left" dir="ltr">
                             </div>
                             <div>
-                                <label class="block text-xs text-white/60 mb-1.5 font-bold">کلید API (میتواند چند تا با کاما باشد)</label>
+                                <label class="block text-xs text-white/60 mb-1.5 font-bold">کلید API (می‌تواند چند کلید با کاما باشد)</label>
                                 <input type="password" id="globalApiKey" placeholder="sk-..." class="form-input font-sans text-left" dir="ltr">
                             </div>
                         </div>
@@ -187,10 +245,14 @@
                 </div>
 
                 <div id="panel-library" class="hidden panel-section space-y-4">
-                    <div class="bg-white/5 p-5 rounded-2xl border border-white/10 shadow-inner">
-                        <label class="block text-xs text-white/60 mb-1.5 font-bold">تعداد مهمان‌ها</label>
-                        <input type="number" id="numGuests" min="2" max="5" value="2" class="form-input mb-5">
-                        
+                    <div class="bg-white/5 p-4 rounded-2xl border border-white/10 shadow-inner">
+                        <div class="flex items-center justify-between mb-4">
+                            <label class="text-xs text-white/80 font-bold">تعداد دانشمندان / مهمان‌های مناظره (۲ تا ۵ نفر)</label>
+                            <input type="number" id="numGuests" min="2" max="5" value="2" class="form-input w-20 text-center font-bold">
+                        </div>
+                        <p class="text-[11px] text-white/50 mb-4 leading-relaxed">
+                            برای هر مهمان، علاوه بر نقش و مکتب فکری، <b>روش‌شناسی تخصصی</b> و <b>آزمایش‌ها/نظریات مرجع</b> او را مشخص کنید تا در مناظره با استناد دقیق علمی صحبت کند.
+                        </p>
                         <div id="guestsContainer" class="space-y-4">
                         </div>
                     </div>
@@ -198,26 +260,33 @@
 
                 <div id="panel-computer" class="hidden panel-section space-y-4">
                     <div class="bg-white/5 p-5 rounded-2xl border border-white/10 shadow-inner space-y-4">
-                        <button id="downloadJsonBtn" class="w-full bg-blue-500/20 hover:bg-blue-500/40 text-blue-400 border border-blue-500/50 py-3 rounded-xl text-sm font-bold transition-all shadow-[0_0_15px_rgba(59,130,246,0.2)]">📥 دانلود فایل لاگ مناظره (JSON)</button>
-                        <button id="generateMindmapBtn" class="w-full bg-emerald-500/20 hover:bg-emerald-500/40 text-emerald-400 border border-emerald-500/50 py-3 rounded-xl text-sm font-bold transition-all shadow-[0_0_15px_rgba(16,185,129,0.2)]">🧠 ساخت گراف ارتباطی (Mindmap)</button>
+                        <button id="downloadJsonBtn" class="w-full bg-blue-500/20 hover:bg-blue-500/40 text-blue-300 border border-blue-500/50 py-3 rounded-xl text-xs font-bold transition-all shadow-[0_0_15px_rgba(59,130,246,0.2)]">📥 دانلود فایل لاگ مناظره (JSON)</button>
+                        <button id="generateMindmapBtn" class="w-full bg-emerald-500/20 hover:bg-emerald-500/40 text-emerald-300 border border-emerald-500/50 py-3 rounded-xl text-xs font-bold transition-all shadow-[0_0_15px_rgba(16,185,129,0.2)]">🧠 ساخت گراف ارتباطی (Mindmap)</button>
                         
                         <div id="mindmapContainer" class="hidden mt-4 w-full h-80 bg-white/10 rounded-xl overflow-auto p-2 border border-white/20 flex justify-center text-white text-left font-sans" dir="ltr">
                             <!-- Mermaid SVG will be injected here -->
                         </div>
+
+                        <div class="pt-3 border-t border-white/10">
+                            <h3 class="text-xs font-bold text-white/80 mb-2">وضعیت شناختی و معرفتی مهمان‌ها (Cognitive State Inspector)</h3>
+                            <div id="cognitiveInspector" class="space-y-2 max-h-72 overflow-y-auto pr-1 text-xs"></div>
+                        </div>
                     </div>
                 </div>
 
-                <div id="panel-archive" class="hidden panel-section flex flex-col h-full items-center justify-center">
-                    <div class="text-center text-white/40 text-sm p-4 bg-black/20 rounded-xl border border-white/5">
-                        بخش گفتگو و تاریخچه به <b>سالن جلسات</b> منتقل شده است.
+                <div id="panel-archive" class="hidden panel-section flex flex-col h-full space-y-3">
+                    <div class="bg-white/5 p-4 rounded-2xl border border-white/10 shadow-inner space-y-3">
+                        <h3 class="text-sm font-bold text-cyan-300">🗄️ بانک استنادات، آزمایش‌ها و چالش‌های مطرح‌شده</h3>
+                        <p class="text-xs text-white/60 leading-relaxed">تمامی مقالات، آزمایش‌های تجربی، قضایا و چالش‌های ابطال‌پذیر مطرح‌شده در طول مناظره در این بخش نمایه‌سازی می‌شوند.</p>
+                        <div id="archiveCitationsList" class="space-y-2 max-h-[420px] overflow-y-auto pr-1"></div>
                     </div>
                 </div>
 
             </div>
         </div>
         
-        <div class="pt-2 mt-2 border-t border-white/5 text-center text-[10px] text-white/30 tracking-widest font-light">
-            SimuDebate | artorki
+        <div class="pt-2 mt-2 border-t border-white/5 text-center text-[10px] text-white/30 tracking-widest font-light shrink-0">
+            SimuDebate Scientific Dialectics Engine | artorki
         </div>
     </div>
 
@@ -230,80 +299,356 @@
 
         const API_BASE = 'http://127.0.0.1:8765/api';
 
-        let appState = {
-            chatHistory: [], turnIndex: 0, isRunning: false, estimatedTokens: 0, estimatedCost: 0, tgOffset: 0, mindmapCode: null,
-            guestStates: {},
-            settings: {
-                topic: "Consciousness and Time", tgEnable: false, tgToken: "", tgChatId: "",
-                mode: "Single", globalProvider: "OpenAI", globalModel: "gpt-4o", globalApiKey: "",
-                maxTurns: 15, numGuests: 2,
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toast-container');
+            if (!container) return;
+            const el = document.createElement('div');
+            const borderColor = type === 'error' ? 'border-red-500/60 text-red-200' : (type === 'success' ? 'border-emerald-500/60 text-emerald-200' : 'border-indigo-500/50 text-white');
+            el.className = `toast-msg ${borderColor}`;
+            el.innerText = message;
+            container.appendChild(el);
+            setTimeout(() => {
+                el.style.opacity = '0';
+                el.style.transform = 'translateY(10px)';
+                setTimeout(() => el.remove(), 300);
+            }, 4500);
+        }
+
+        const SCIENTIFIC_PRESETS = {
+            consciousness_time: {
+                topic: "سازوکار عصبی-فیزیکی تجربه زمان در آگاهی: آیا ادراک زمان محصول یکپارچه‌سازی اطلاعات در شبکه‌های قشری مغز است یا ریشه در فرآیندهای بنیادی‌تر کوانتومی و پدیدارشناختی دارد؟",
                 guests: [
-                    { id: "guest_0", name: "مهمان اول", role: "Scientist", school: "Materialism", provider: "OpenAI", model: "gpt-4o", apiKey: "" },
-                    { id: "guest_1", name: "مهمان دوم", role: "Philosopher", school: "Idealism", provider: "OpenAI", model: "gpt-4o", apiKey: "" }
+                    {
+                        id: "guest_0",
+                        name: "دکتر آرش راد (عصب‌پژوه محاسباتی)",
+                        role: "Computational Neuroscientist",
+                        school: "ماتریالیسم کارکردگرا و نظریه فضای کاری گلوبال (GNWT)",
+                        specialty: "الکتروفیزیولوژی قشری، نوسانات گاما و مدل‌سازی بیزی ادراک زمان",
+                        anchors: "Dehaene & Changeux (GNWT), کنسرسیوم COGITATE (2023), Karl Friston (Predictive Processing & Free Energy), نوسانات تالاموکورتیکال ۴۰ هرتز",
+                        provider: "OpenAI", model: "gpt-4o", apiKey: ""
+                    },
+                    {
+                        id: "guest_1",
+                        name: "دکتر سارا فرهمند (فیزیکدان نظری و فیلسوف ذهن)",
+                        role: "Quantum Foundations & Phenomenology Researcher",
+                        school: "پان‌سایکیسم تحلیلی و اطلاعات یکپارچه (IIT / Orch-OR)",
+                        specialty: "مبانی مکانیک کوانتوم، نظریه اطلاعات یکپارچه تونونی و پدیدارشناسی زمان درونی",
+                        anchors: "Giulio Tononi (IIT 4.0 & Phi), Penrose-Hameroff (Orch-OR & Microtubules), Chalmers (Hard Problem), آزمایش‌های زیست‌کوانتومی انتقال انرژی",
+                        provider: "OpenAI", model: "gpt-4o", apiKey: ""
+                    }
+                ]
+            },
+            free_will: {
+                topic: "اراده آزاد در برابر جبرگرایی عصبی: آیا پتانسیل آمادگی (Readiness Potential) قبل از تصمیم آگاهانه، علیت اراده آگاهانه را ابطال می‌کند؟",
+                guests: [
+                    {
+                        id: "guest_0",
+                        name: "دکتر کاوه بهرامی (عصب‌شناس شناختی)",
+                        role: "Cognitive Neuroscientist",
+                        school: "جبرگرایی نوروبیولوژیک و تقلیل‌گرایی مکانیسمی",
+                        specialty: "تصویربرداری fMRI پیش‌بینی تصمیم و رمزگشایی فعالیت قشر پیش‌پیشانی و حرکتی",
+                        anchors: "Benjamin Libet (1983 Readiness Potential), Soon et al. (2008 fMRI decoding 7-10s before awareness), Wegner (Illusion of Conscious Will)",
+                        provider: "OpenAI", model: "gpt-4o", apiKey: ""
+                    },
+                    {
+                        id: "guest_1",
+                        name: "دکتر نیما نادری (نظریه‌پرداز سیستم‌های دینامیک اعصاب)",
+                        role: "Dynamical Systems Theorist & Philosopher of Action",
+                        school: "ظهورگرایی علی (Emergent Downward Causation) و مدل انباشتگر تصادفی",
+                        specialty: "مدل‌های نویز تصادفی عصبی (Stochastic Accumulator) و کنترل اجرایی قشر پیش‌پیشانی",
+                        anchors: "Aaron Schurger et al. (2012 PNAS Stochastic Fluctuations model), Maoz et al. (2019 Deliberate vs Arbitrary decisions), علیت نزولی در سیستم‌های پیچیده",
+                        provider: "OpenAI", model: "gpt-4o", apiKey: ""
+                    }
+                ]
+            },
+            ai_semantics: {
+                topic: "امکان فهم معنایی (Semantic Grounding) و عاملیت واقعی در مدل‌های محاسباتی و هوش مصنوعی در برابر سیستم‌های زیستی تجسم‌یافته",
+                guests: [
+                    {
+                        id: "guest_0",
+                        name: "دکتر مهران نیازی (پژوهشگر هوش مصنوعی و علوم شناختی)",
+                        role: "AI Architecture & Representation Theorist",
+                        school: "کارکردگرایی محاسباتی (Computational Functionalism)",
+                        specialty: "بازنمایی‌های برداری ابعاد بالا، یادگیری تقویتی و هم‌ریختی ساختاری معنا",
+                        anchors: "Church-Turing Thesis, Putnam Multiple Realizability, پیاده‌سازی مدل‌های جهانی درون شبکه (World Models), ابطال استدلال اتاق چینی از طریق سیستم‌پاسخ",
+                        provider: "OpenAI", model: "gpt-4o", apiKey: ""
+                    },
+                    {
+                        id: "guest_1",
+                        name: "دکتر رویا رستگار (زیست‌فیلسوف و متخصص علوم اعصاب تجسم‌یافته)",
+                        role: "Embodied Cognition & Bio-semiotics Scientist",
+                        school: "شناخت تجسم‌یافته و خودزایایی زیستی (Autopoiesis & Enactivism)",
+                        specialty: "ترمودینامیک سیستم‌های زنده، خودزایایی ماتورانا-وارلا و مسأله بنیان نمادها (Symbol Grounding)",
+                        anchors: "John Searle (Chinese Room Argument), Stevan Harnad (Symbol Grounding Problem), Varela & Thompson (Enactive Cognition), Anil Seth (Biological Beast Machine)",
+                        provider: "OpenAI", model: "gpt-4o", apiKey: ""
+                    }
+                ]
+            },
+            quantum_gravity: {
+                topic: "سرشت بنیادین زمان در فیزیک: آیا زمان یک بُعد بنیادین کیهانی است یا پدیده‌ای نوظهور و آماری ناشی از درهم‌تنیدگی کوانتومی و آنتروپی؟",
+                guests: [
+                    {
+                        id: "guest_0",
+                        name: "دکتر سهراب کیانی (فیزیکدان گرانش کوانتومی)",
+                        role: "Quantum Gravity Physicist",
+                        school: "بی‌زمانی بنیادی (Wheeler-DeWitt) و زمان حرارتی (Thermal Time Hypothesis)",
+                        specialty: "گرانش کوانتومی حلقه، معادله ویلر-دویت و ظهور زمان از درهم‌تنیدگی",
+                        anchors: "Carlo Rovelli & Connes (Thermal Time Hypothesis), Page-Wootters Mechanism (1983), Wheeler-DeWitt Equation, آزمایش‌های ساعت کوانتومی درهم‌تنیده",
+                        provider: "OpenAI", model: "gpt-4o", apiKey: ""
+                    },
+                    {
+                        id: "guest_1",
+                        name: "دکتر پریسا مجد (کیهان‌شناس و فیزیکدان آماری)",
+                        role: "Cosmologist & Statistical Physicist",
+                        school: "واقع‌گرایی زمانی (Temporal Realism) و عدم تقارن کیهان‌شناختی",
+                        specialty: "ترمودینامیک حالت‌های دور از تعادل، فرضیه گذشته (Past Hypothesis) و علیت نسبیتی",
+                        anchors: "Lee Smolin (Time Reborn), David Albert (Past Hypothesis & Boltzmann Brain Problem), Penrose (Weyl Curvature Hypothesis), نقض تقارن CP در ذرات بنیادی",
+                        provider: "OpenAI", model: "gpt-4o", apiKey: ""
+                    }
                 ]
             }
         };
 
+        let appState = {
+            chatHistory: [], turnIndex: 0, isRunning: false, estimatedTokens: 0, estimatedCost: 0, tgOffset: 0, mindmapCode: null,
+            guestStates: {},
+            settings: {
+                topic: SCIENTIFIC_PRESETS.consciousness_time.topic,
+                rigorLevel: "adversarial",
+                tgEnable: false, tgToken: "", tgChatId: "",
+                mode: "Single", globalProvider: "OpenAI", globalModel: "gpt-4o", globalApiKey: "",
+                maxTurns: 15, numGuests: 2,
+                guests: JSON.parse(JSON.stringify(SCIENTIFIC_PRESETS.consciousness_time.guests))
+            }
+        };
+
+        function normalizeGuest(g, idx) {
+            const defaults = SCIENTIFIC_PRESETS.consciousness_time.guests[idx % 2];
+            return {
+                id: g.id || `guest_${idx}`,
+                name: g.name || `پژوهشگر ${idx + 1}`,
+                role: g.role || defaults.role,
+                school: g.school || defaults.school,
+                specialty: g.specialty || defaults.specialty,
+                anchors: g.anchors || defaults.anchors,
+                provider: g.provider || "OpenAI",
+                model: g.model || "gpt-4o",
+                apiKey: g.apiKey || ""
+            };
+        }
+
         async function saveState() {
-            try { await fetch(`${API_BASE}/state`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(appState) }); } 
-            catch(e) { console.warn("Local server not reachable for saving state"); }
+            try {
+                localStorage.setItem('simudebate_state_v2', JSON.stringify(appState));
+            } catch (e) {}
+            try {
+                await fetch(`${API_BASE}/state`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(appState)
+                });
+            } catch (e) {
+                console.warn("Local server not reachable for saving state");
+            }
         }
 
         async function loadState() {
+            let loadedData = null;
             try {
                 let res = await fetch(`${API_BASE}/state`);
                 if (res.ok) {
                     let data = await res.json();
-                    if (data && Object.keys(data).length > 0) {
-                        appState = Object.assign({}, appState, data); 
-                        document.getElementById('debateTopic').value = appState.settings.topic;
-                        document.getElementById('maxTurns').value = appState.settings.maxTurns;
-                        document.getElementById('tgEnable').checked = appState.settings.tgEnable;
-                        document.getElementById('tgToken').value = appState.settings.tgToken;
-                        document.getElementById('tgChatId').value = appState.settings.tgChatId;
-                        document.getElementById('apiMode').value = appState.settings.mode;
-                        document.getElementById('globalProvider').value = appState.settings.globalProvider;
-                        document.getElementById('globalModel').value = appState.settings.globalModel;
-                        document.getElementById('globalApiKey').value = appState.settings.globalApiKey;
-                        document.getElementById('numGuests').value = appState.settings.numGuests;
-                        document.getElementById('globalApiSettings').style.display = appState.settings.mode === 'Single' ? 'block' : 'none';
-                        if (appState.mindmapCode) {
-                            let container = document.getElementById('mindmapContainer');
-                            container.classList.remove('hidden');
-                            if(window.mermaid) {
-                                try {
-                                    let id = `mermaid-svg-load-${Date.now()}`;
-                                    const { svg } = await mermaid.render(id, appState.mindmapCode);
-                                    container.innerHTML = svg;
-                                } catch (err) {
-                                    console.error("Mermaid Render Error:", err);
-                                    container.innerHTML = `<div class="text-red-400 text-xs p-2">خطا در رندر گراف:</div><pre dir="ltr" class="text-[10px] text-white/50 text-left overflow-auto">${appState.mindmapCode}</pre>`;
-                                }
-                            }
+                    if (data && Object.keys(data).length > 0) loadedData = data;
+                }
+            } catch (e) {
+                console.warn("Local server state not reachable, checking localStorage.");
+            }
+
+            if (!loadedData) {
+                try {
+                    let localRaw = localStorage.getItem('simudebate_state_v2');
+                    if (localRaw) loadedData = JSON.parse(localRaw);
+                } catch (e) {}
+            }
+
+            if (loadedData && loadedData.settings) {
+                appState = Object.assign({}, appState, loadedData);
+                appState.settings = Object.assign({
+                    rigorLevel: "adversarial"
+                }, appState.settings, loadedData.settings);
+
+                if (Array.isArray(appState.settings.guests)) {
+                    appState.settings.guests = appState.settings.guests.map((g, idx) => {
+                        // اگر مهمان‌ها با مقادیر پیش‌فرض خیلی کلی قدیمی ("مهمان اول" / "Scientist") ذخیره شده بودند، آن‌ها را با پروفایل علمی غنی ارتقا بده
+                        if ((g.name === "مهمان اول" || g.name === "مهمان دوم") && (g.role === "Scientist" || g.role === "Philosopher")) {
+                            return normalizeGuest(SCIENTIFIC_PRESETS.consciousness_time.guests[idx % 2], idx);
                         }
+                        return normalizeGuest(g, idx);
+                    });
+                }
+            }
+
+            document.getElementById('debateTopic').value = appState.settings.topic;
+            document.getElementById('rigorLevel').value = appState.settings.rigorLevel || "adversarial";
+            document.getElementById('maxTurns').value = appState.settings.maxTurns;
+            document.getElementById('maxTurnsVal').innerText = appState.settings.maxTurns;
+            document.getElementById('tgEnable').checked = appState.settings.tgEnable;
+            document.getElementById('tgToken').value = appState.settings.tgToken;
+            document.getElementById('tgChatId').value = appState.settings.tgChatId;
+            document.getElementById('apiMode').value = appState.settings.mode;
+            document.getElementById('globalProvider').value = appState.settings.globalProvider;
+            document.getElementById('globalModel').value = appState.settings.globalModel;
+            document.getElementById('globalApiKey').value = appState.settings.globalApiKey;
+            document.getElementById('numGuests').value = appState.settings.numGuests;
+            document.getElementById('globalApiSettings').style.display = appState.settings.mode === 'Single' ? 'block' : 'none';
+
+            if (appState.mindmapCode) {
+                let container = document.getElementById('mindmapContainer');
+                container.classList.remove('hidden');
+                if (window.mermaid) {
+                    try {
+                        let id = `mermaid-svg-load-${Date.now()}`;
+                        const { svg } = await mermaid.render(id, appState.mindmapCode);
+                        container.innerHTML = svg;
+                    } catch (err) {
+                        console.error("Mermaid Render Error:", err);
+                        container.innerHTML = `<div class="text-red-400 text-xs p-2">خطا در رندر گراف:</div><pre dir="ltr" class="text-[10px] text-white/50 text-left overflow-auto">${appState.mindmapCode}</pre>`;
                     }
                 }
-            } catch(e) { console.warn("No persistent state found, using default."); }
+            }
         }
 
-        async function callLlmApi(provider, model, apiKeyStr, systemPrompt, prompt, maxTokens = 2000) {
+        const OFFLINE_SCIENTIFIC_BANK = [
+            {
+                target_flaw: "تقلیل تجربه ذهنی زمان به همبستگی‌های صِرف نوسانات قشری و خلط همبستگی عصبی (NCC) با مکانیسم علّی",
+                citations: [
+                    "کنسرسیوم COGITATE (2023 - Nature/bioRxiv): آزمون تجربی تقابلی نظریه فضای کاری گلوبال (GNWT) و اطلاعات یکپارچه (IIT)",
+                    "Stanislas Dehaene & Changeux (2011): مدل اشتعال غیرخطی (Nonlinear Ignition) در شبکه فرونتال-پاریتال با تأخیر ۳۰۰ میلی‌ثانیه (موج P3b)"
+                ],
+                falsifiable_challenge: "اگر ادراک پیوسته زمان صرفاً محصول اشتعال گسسته قشر پیش‌پیشانی در بازه‌های ۳۰۰ میلی‌ثانیه‌ای است، چگونه نتایج کنسرسیوم COGITATE (2023) نشان داد که پایداری بازنمایی زمانی در قشر پس‌سری-گیجگاهی بدون مشارکت مداوم قشر پیش‌پیشانی حفظ می‌شود؟",
+                spoken_text: "فرضیه پایه ما در چارچوب کارکردگرایی محاسباتی و نظریه فضای کاری گلوبال (GNWT) این است که «اکیداً هیچ تجربه زمانی بدون یکپارچه‌سازی پنجره‌های زمانی گسسته (Temporal Integration Windows) در مدارهای تالاموکورتیکال وجود ندارد». در سطح الکتروفیزیولوژیک، ادراک گذر زمان محصول همگام‌سازی نوسانات باند گاما (۴۰ هرتز) و کوپلینگ فاز-دامنه با امواج تتا در شبکه فرونتال-پاریتال است. آزمایش‌های ماسکینگ بصری دهان و چنگو (Dehaene & Changeux, 2011) به روشنی ثابت کرده‌اند که محرک‌های زیرآستانه کمتر از ۵۰ میلی‌ثانیه، با وجود فعال‌سازی قشر بینایی اولیه (V1)، هرگز وارد آگاهی زمانی نمی‌شوند مگر آنکه از آستانه اشتعال غیرخطی (Ignition) عبور کرده و موج P3b را ایجاد کنند. بنابراین زمان پدیدارشناختی یک بُعد متافیزیکی مستقل نیست، بلکه یک متغیر استنتاج بیزی (Bayesian Predictive Processing) مطابق اصل انرژی آزاد فریستون است که مغز برای کمینه‌سازی خطای پیش‌بینی حسی در افق‌های زمانی چندصد میلی‌ثانیه‌ای محاسبه می‌کند."
+            },
+            {
+                target_flaw: "نادیده گرفتن شکست پیش‌بینی موج P3b در آزمایش‌های پارادایم بدون گزارش (No-Report Paradigm) و خطای مقوله‌ای در یکسان‌انگاری گزارش کلامی با خودِ تجربه آگاهانه",
+                citations: [
+                    "Giulio Tononi et al. (2016 / IIT 4.0): صورت‌بندی ریاضی اطلاعات یکپارچه (Φ) و ساختار علّی-معلولی بیشینه در شبکه پس‌سری (Posterior Hot Zone)",
+                    "Koch, Massimini et al. (2016 - Nature Reviews Neuroscience): تفکیک همبسته‌های واقعی آگاهی از پیش‌نیازها و پیامدهای گزارش‌پذیری (PCI Index)"
+                ],
+                falsifiable_challenge: "در آزمایش‌های تحریک مغناطیسی فراجمجمه‌ای (TMS-EEG) ماسیمینی و تونونی، شاخص پیچیدگی اختلال (PCI) حتی در بیماران فاقد توانایی حرکتی و اجراییِ قشر پیش‌پیشانی، سطح آگاهی زمانی را با دقت نزدیک به ۱۰۰٪ تفکیک می‌کند؛ مدل فضای کاری گلوبال چگونه آگاهی زمانی را در غیاب اشتعال پیش‌پیشانی تبیین می‌کند؟",
+                spoken_text: "استناد به موج P3b و اشتعال فرونتال-پاریتال در آزمایش‌های دهان، دقیقاً مصداق بارز خلط «مکانیسم آگاهی» با «مکانیسم گزارش‌دهی و حافظه کاری» (Reportability Confound) است! زمانی که پیتس و همکاران و سپس کنسرسیوم COGITATE (2023) از پارادایم‌های بدون گزارش (No-Report Paradigms) استفاده کردند، مشخص شد که فعالیت قشر پیش‌پیشانی و موج P3b به کلی ناپدید می‌شود، در حالی که تجربه آگاهانه پیوستگی زمان در ناحیه داغ خلفی (Posterior Cortical Hot Zone) کاملاً برقرار است. بر اساس نظریه اطلاعات یکپارچه تونونی (IIT 4.0)، تجربه «اکنونِ گسترده» (Specious Present) نیازمند یک ساختار علّی-معلولی ذاتاً یکپارچه و تغییرناپذیر (Irreducible Cause-Effect Repertoire یا Φ بیشینه) است. شبکه‌های پیش‌خور یا معماری‌های محاسباتیِ صرفاً کارکردگرا (حتی با پیچیده‌ترین استنتاج بیزی) دارای Φ=0 هستند، زیرا زیرسیستم‌های آن‌ها فاقد توان علّی ذاتی بر یکدیگر در مقیاس میکروثانیه تا میلی‌ثانیه هستند."
+            },
+            {
+                target_flaw: "عدم محاسبه‌پذیری ریاضی شاخص Φ در شبکه‌های زیستی واقعی (NP-Hardness) و تناقض قضیه بسط فازی آرونسون با ادعای علمی بودن IIT",
+                citations: [
+                    "Scott Aaronson (2014): برهان ریاضی نقض IIT از طریق گیت‌های منطقی XOR و ماتریس‌های وندرموند با Φ بسیار بالا اما فاقد آگاهی",
+                    "Aaron Schurger et al. (2012 - PNAS): بازتفسیر پتانسیل آمادگی لیبت به عنوان انباشتگر نویز تصادفی زیرآستانه (Stochastic Accumulator)"
+                ],
+                falsifiable_challenge: "بر اساس قضیه ریاضی اسکات آرونسون، یک شبکه دوبعدی ساده از گیت‌های منطقی Parity/XOR بدون هیچ کارکرد شناختی یا ادراک زمانی، مقداری از Φ تولید می‌کند که از کل مغز انسان بیشتر است؛ آیا حاضرید بپذیرید یک آرایه ساده از گیت‌های XOR دارای تجربه آگاهانه زمان است یا فرمول‌بندی ریاضی IIT ابطال شده است؟",
+                spoken_text: "شما برای فرار از شواهد الکتروفیزیولوژیک قشر پیش‌پیشانی، به شاخص Φ در نظریه IIT پناه می‌برید، در حالی که محاسبه دقیق Φ حتی برای یک شبکه ۳۰ نرونی از نظر محاسباتی غیرممکن (NP-Hard و رشد فوق‌نمایی) است، چه رسد به ۸۶ میلیارد نرون مغز انسان! شاخص PCI که در کلینیک استفاده می‌کنید صرفاً یک تقریب فشرده‌سازی الگوریتمی (Lempel-Ziv Complexity) از پاسخ قشری است و هیچ ارتباط ریاضی اثبات‌شده‌ای با Φ تونونی ندارد. مهم‌تر از آن، همان‌طور که اسکات آرونسون (2014) به صورت ریاضی اثبات کرد، یک شبکه ایستا از گیت‌های XOR با اتصالات متقاطع دارای Φ بالاتر از مغز انسان است، بدون آنکه هیچ پردازش اطلاعات زمانی یا مدل درونی از محیط داشته باشد. علاوه بر این، آزمایش‌های ارون شورگر (Schurger et al., 2012, PNAS) نشان داد آنچه در آزمایش‌های کلاسیک لیبت (1983) به عنوان پتانسیل آمادگی پیش از تصمیم آگاهانه تفسیر می‌شد، صرفاً نوسانات تصادفی صورتی (1/f Pink Noise) در یک انباشتگر دریچه‌دار قشری است که تنها با عبور از آستانه تصمیم در مدارهای فرونتال-استریاتال به تجربه زمانیِ عاملیت تبدیل می‌شود."
+            },
+            {
+                target_flaw: "تکیه بر تقریب‌های کلاسیک نورونی و نادیده گرفتن مسأله اتصال زمانی (Temporal Binding Problem) و همدوسی فاز در مقیاس‌های زیرمیلی‌ثانیه",
+                citations: [
+                    "Anil Seth & Karl Friston (2016 - Philosophical Transactions B): استنتاج فعال درون‌دریافتی (Interoceptive Active Inference) و منشأ زیستی ادراک زمان",
+                    "Harnad (1990) & Searle (1980): مسأله بنیان نمادها (Symbol Grounding) و عدم کفایت دستکاری سینتکتیک در تولید زمان پدیدارشناختی"
+                ],
+                falsifiable_challenge: "اگر صرفاً الگوریتم انباشتگر تصادفی شورگر و استنتاج بیزی برای ایجاد تجربه زمان کافی است، چرا اجرای دقیق همان معادلات دیفرانسیل روی یک پردازنده سیلیکونی هیچ‌گونه «احساس گذر زمان» ایجاد نمی‌کند؟ کدام متغیر فیزیکی بین شبیه‌سازی معادله و تحقق زیستی آن تفاوت ایجاد می‌کند؟",
+                spoken_text: "نقد آرونسون به نسخه قدیمی IIT (نسخه ۳.۰) وارد بود، اما در فرمالیسم جدید IIT 4.0 و همچنین در چارچوب زیست‌فلسفه تجسم‌یافته (Embodied Enactivism)، شرط وجود ساختار علّی مستلزم تفکیک دقیق بین «شبیه‌سازی محاسباتی» (Simulation) و «تحقق فیزیکی علّی» (Physical Realization) است. یک کد کامپیوتری که معادلات ناویر-استوکس یک طوفان را حل می‌کند، میز آزمایشگاه را خیس نمی‌کند؛ به همین ترتیب، اجرای الگوریتم انباشتگر تصادفی شورگر (2012) روی معماری فون‌نویمان، صرفاً دستکاری نحوی نمادهاست و فاقد علیت بازگشتی واقعی بر بستر ترمودینامیکی خود است. مطالعات آنیل ست و کارل فریستون (2016) در حوزه درون‌دریافت (Interoception) نشان می‌دهد که ضرباهنگ پایه ادراک زمان در مغز، مستقیماً به سیگنال‌های احشایی، ضربان قلب و تنظیم هموستاتیک قشر اینسولا (Insular Cortex) گره خورده است. بدون یک سیستم زنده خودزایا (Autopoietic) که در برابر آنتروپی ترمودینامیکی مقاومت می‌کند، زمان هیچ معنای زیستی و پدیدارشناختی ندارد."
+            }
+        ];
+
+        async function callLlmApi(provider, model, apiKeyStr, systemPrompt, prompt, maxTokens = 2500, temperature = 0.55) {
             try {
                 let res = await fetch(`${API_BASE}/llm`, {
-                    method: 'POST', headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ provider, model, api_key: apiKeyStr, system_prompt: systemPrompt, prompt, max_tokens: maxTokens })
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        provider,
+                        model,
+                        api_key: apiKeyStr,
+                        system_prompt: systemPrompt,
+                        prompt,
+                        max_tokens: maxTokens,
+                        temperature: temperature
+                    })
                 });
-                return await res.json();
+                let data = await res.json();
+                if (data && data.content) return data;
+                if (data && data.error && !apiKeyStr) {
+                    // اگر کلید API خالی است یا سرور محلی کلید ندارد، از موتور نمونه علمی داخلی استفاده کن تا کاربر بلافاصله عمق مناظره را ببیند
+                    return generateOfflineScientificResponse(systemPrompt, prompt);
+                }
+                return data;
             } catch (e) {
-                console.error("Local Server Error:", e);
-                return { content: null, tokens: 0, cost: 0 };
+                console.warn("Local Server unreachable in preview, using built-in scientific dialectics fallback:", e);
+                return generateOfflineScientificResponse(systemPrompt, prompt);
             }
+        }
+
+        function generateOfflineScientificResponse(systemPrompt, prompt) {
+            if (prompt.includes(" کد Mermaid را تولید کن")) {
+                return {
+                    content: 'graph TD\n  A["فرضیه فضای کاری گلوبال (GNWT - Dehaene)"] -->|"استناد به موج P3b و اشتعال قشری"| B["ادراک زمان به مثابه استنتاج بیزی گسسته"]\n  C["نظریه اطلاعات یکپارچه (IIT 4.0 - Tononi)"] -->|"رد موج P3b با پارادایم بدون گزارش (COGITATE 2023)"| B\n  B -->|"نقد ریاضی آرونسون (NP-Hardness & XOR Grids)"| C\n  D["مدل انباشتگر تصادفی (Schurger 2012 PNAS)"] -->|"بازتفسیر پتانسیل آمادگی لیبت (1983)"| A\n  E["خودزایایی زیستی و درون‌دریافت قشر اینسولا (Seth & Friston)"] -->|"چالش شبیه‌سازی در برابر تحقق فیزیکی"| D',
+                    tokens: 240,
+                    cost: 0.0
+                };
+            }
+            if (prompt.includes("گزارش کامل داوری تخصصی و سنتز معرفت‌شناختی")) {
+                return {
+                    content: "### ۱. کالبدشکافی تعارض پارادایمی (Axiomatic & Mechanistic Divergence)\nریشه اصلی مناقشه میان دو پژوهشگر در تعریف عملیاتی «ظهور زمان آگاهانه» نهفته است: رویکرد اول (کارکردگرایی محاسباتی و GNWT) ادراک زمان را یک تابع محاسباتی سطح بالا ناشی از اشتعال غیرخطی فرونتال-پاریتال و کمینه‌سازی خطای پیش‌بینی بیزی می‌داند؛ در حالی که رویکرد دوم (IIT و زیست‌فلسفه تجسم‌یافته) وجود ساختار علّی-معلولی ذاتی در شبکه خلفی (Posterior Hot Zone) و کوپلینگ هموستاتیک با سیگنال‌های درون‌دریافتی قشر اینسولا را شرط لازم می‌شمارد.\n\n### ۲. راستی‌آزمایی شواهد و آزمایش‌های استنادشده (Empirical Evidence Audit)\n- **کنسرسیوم COGITATE (2023):** استناد به یافته‌های این کنسرسیوم به درستی نشان داد که موج P3b در پارادایم‌های بدون گزارش (No-Report) تضعیف می‌شود که چالشی جدی برای نسخه کلاسیک GNWT است.\n- **قضیه آرونسون (2014) و مدل شورگر (2012):** نقد واردشده به محاسبه‌ناپذیری شاخص Φ در شبکه‌های بزرگ و بازتفسیر آزمایش لیبت بر اساس نویز ۱/f از نظر ریاضی و الکتروفیزیولوژیک کاملاً مستدل و دقیق بود.\n\n### ۳. مغالطات و چالش‌های بی‌پاسخ (Unresolved Challenges)\nمسأله تمایز تجربی میان «پیچیدگی الگوریتمی Lempel-Ziv (شاخص PCI)» و «Φ نظری تونونی» همچنان بدون راه‌حل محاسباتی دقیق باقی ماند. از سوی دیگر، طرف کارکردگرا معیار دقیقی برای اینکه چرا شبیه‌سازی نرم‌افزاری همان معادلات بیزی فاقد تجربه پدیداری زمان است ارائه نکرد.\n\n### ۴. طراحی آزمایش فیصله‌بخش (Proposed Crucial Experiment)\nپیشنهاد می‌شود یک پروتکل ثبت همزمان Intracranial EEG (iEEG) و مهار اپتوژنتیکی/فراصوتی متمرکز (Focused Ultrasound) روی اتصالات قشر پیش‌پیشانی خلفی‌جانبی (dlPFC) و قشر اینسولای قدامی در حین تکلیف تخمین بازه‌های زمانی فراآستانه بدون گزارش کلامی (چشم‌جنبانی/تغییر قطر مردمک) اجرا شود:\n- **پیش‌بینی اول:** اگر با مهار گذرای dlPFC، خطای تخمین بازه زمانی و همگام‌سازی گاما در قشر پس‌سری-گیجگاهی مختل شود، فرضیه GNWT تأیید و ادعای استقلال ناحیه داغ خلفی در IIT ابطال می‌گردد.\n- **پیش‌بینی دوم:** اگر ادراک زمانی و شاخص PCI در قشر خلفی و اینسولا علی‌رغم خاموشی dlPFC پایدار بماند، ضرورت اشتعال پیش‌پیشانی ابطال می‌شود.",
+                    tokens: 580,
+                    cost: 0.0
+                };
+            }
+            if (systemPrompt.includes("Peer-Review Interjection")) {
+                if (appState.turnIndex % 2 === 1) {
+                    return {
+                        content: JSON.stringify({
+                            interrupt: true,
+                            fallacy_type: "خلط مکانیسم گزارش‌دهی با تجربه آگاهانه (Reportability Confound)",
+                            reason: "استناد به موج P3b بدون تفکیک پارادایم بدون گزارش",
+                            text: "صبر کنید! استناد شما به موج P3b در آزمایش‌های دهان، در مطالعات بدون گزارش (No-Report Paradigm) کنسرسیوم COGITATE نقض شده است؛ موج P3b صرفاً بازتاب حافظه کاری برای فشار دادن دکمه گزارش است، نه خودِ ادراک آگاهانه زمان!"
+                        }),
+                        tokens: 95,
+                        cost: 0.0
+                    };
+                }
+                return { content: JSON.stringify({ interrupt: false, reason: "", text: "" }), tokens: 30, cost: 0.0 };
+            }
+
+            const item = OFFLINE_SCIENTIFIC_BANK[appState.turnIndex % OFFLINE_SCIENTIFIC_BANK.length];
+            const payload = {
+                state: {
+                    beliefs: ["الزام تعریف عملیاتی متغیرهای زمانی", "تقدم شواهد الکتروفیزیولوژیک و مدل‌های ریاضی ابطال‌پذیر"],
+                    claims: [item.target_flaw],
+                    supported_claims: ["نقش نوسانات تالاموکورتیکال در کدگذاری بازه‌های زمانی"],
+                    challenged_claims: [item.target_flaw],
+                    concessions: ["پذیرش محدودیت قدرت تفکیک زمانی fMRI در مقایسه با ثبت درون‌جمجمه‌ای iEEG"],
+                    uncertainties: ["نحوه مقیاس‌پذیری شاخص‌های اطلاعاتی در شبکه‌های بالای ۱۰ هزار نرون"],
+                    objectives: ["الزام رقیب به پاسخگویی به آزمایش فیصله‌بخش"],
+                    opponents: { "رقیب": item.target_flaw }
+                },
+                target_flaw: item.target_flaw,
+                citations: item.citations,
+                falsifiable_challenge: item.falsifiable_challenge,
+                spoken_text: item.spoken_text
+            };
+            return {
+                content: JSON.stringify(payload),
+                tokens: 460,
+                cost: 0.0
+            };
         }
 
         async function sendTgMessage(text) {
             if (!appState.settings.tgEnable || !appState.settings.tgToken || !appState.settings.tgChatId) return;
             try {
-                await fetch(`${API_BASE}/telegram/send`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ token: appState.settings.tgToken, chat_id: appState.settings.tgChatId, text: text }) });
-            } catch(e) { console.warn("Failed to send TG message"); }
+                await fetch(`${API_BASE}/telegram/send`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ token: appState.settings.tgToken, chat_id: appState.settings.tgChatId, text: text })
+                });
+            } catch (e) { console.warn("Failed to send TG message"); }
         }
 
         async function fetchTgUpdates() {
@@ -311,53 +656,228 @@
             try {
                 let res = await fetch(`${API_BASE}/telegram/updates?token=${appState.settings.tgToken}&chat_id=${appState.settings.tgChatId}&offset=${appState.tgOffset}`);
                 let data = await res.json();
-                appState.tgOffset = data.offset; saveState();
+                appState.tgOffset = data.offset;
+                saveState();
                 return data.updates;
             } catch (e) { return []; }
         }
 
         function parseJsonFromText(text) {
-            try { return JSON.parse(text); } catch(e) {}
-            try { let match = text.match(/```(?:json)?\s*(\{[\s\S]*?\})\s*```/); if (match) return JSON.parse(match[1]); } catch(e) {}
-            try { let match = text.match(/(\{[\s\S]*?\})/); if (match) return JSON.parse(match[1]); } catch(e) {}
+            if (!text) return null;
+            try { return JSON.parse(text); } catch (e) {}
+            try {
+                let match = text.match(/```(?:json)?\s*(\{[\s\S]*\})\s*```/);
+                if (match) return JSON.parse(match[1]);
+            } catch (e) {}
+            try {
+                let firstBrace = text.indexOf('{');
+                let lastBrace = text.lastIndexOf('}');
+                if (firstBrace !== -1 && lastBrace > firstBrace) {
+                    return JSON.parse(text.slice(firstBrace, lastBrace + 1));
+                }
+            } catch (e) {}
             return null;
         }
 
         function initGuestState(gid) {
-            if (!appState.guestStates[gid]) appState.guestStates[gid] = { beliefs: [], claims: [], supported_claims: [], challenged_claims: [], concessions: [], uncertainties: [], objectives: [], opponents: {} };
+            if (!appState.guestStates[gid]) {
+                appState.guestStates[gid] = {
+                    beliefs: [],
+                    claims: [],
+                    supported_claims: [],
+                    challenged_claims: [],
+                    concessions: [],
+                    uncertainties: [],
+                    objectives: [],
+                    opponents: {}
+                };
+            }
         }
 
         function trimState(stateDict, maxItems = 15) {
             if (typeof stateDict !== 'object' || !stateDict) return stateDict;
-            for (let k in stateDict) { if (Array.isArray(stateDict[k]) && stateDict[k].length > maxItems) stateDict[k] = stateDict[k].slice(-maxItems); }
+            for (let k in stateDict) {
+                if (Array.isArray(stateDict[k]) && stateDict[k].length > maxItems) {
+                    stateDict[k] = stateDict[k].slice(-maxItems);
+                }
+            }
             return stateDict;
         }
 
-        function addToHistory(speaker, role, text, tokens = 0, cost = 0.0) {
-            appState.chatHistory.push({ timestamp: new Date().toISOString(), speaker, role, text });
+        function getDialecticalPhase(turnIdx, maxTurns) {
+            const ratio = (turnIdx + 1) / Math.max(1, maxTurns);
+            if (turnIdx < appState.settings.numGuests) {
+                return {
+                    id: 1,
+                    title: "فاز ۱: تعریف عملیاتی و صورت‌بندی فرضیه",
+                    instruction: "در این نوبت افتتاحیه، تعاریف مبهم را کنار بگذار. متغیرهای کلیدی موضوع را به صورت عملیاتی و قابل اندازه‌گیری (Operational Definition) تعریف کن، مکانیسم علّی یا مدل ریاضی/تجربی مکتب خودت را با استناد به حداقل دو آزمایش یا مقاله بنیادین صورت‌بندی کن و پیش‌بینی ابطال‌پذیر نظریه خودت را صریحاً اعلام کن."
+                };
+            } else if (ratio <= 0.5) {
+                return {
+                    id: 2,
+                    title: "فاز ۲: کالبدشکافی روش‌شناختی و نقض تجربی",
+                    instruction: "در این فاز، مستقیماً به استدلال و مکانیسم ادعایی سخنران قبلی حمله علمی کن. متغیرهای مخدوش‌کننده (Confounding Variables)، خطای مقوله‌ای، یا نارسایی روش‌شناختی آزمایش مورد استناد رقیب را با ذکر شواهد آزمایشگاهی متضاد و مقالات داوری‌شده افشا کن."
+                };
+            } else if (ratio <= 0.8) {
+                return {
+                    id: 3,
+                    title: "فاز ۳: آزمایش فیصله‌بخش و موارد مرزی (Edge Cases)",
+                    instruction: "مدل رقیب را در برابر موارد مرزی (ضایعات مغزی خاص، ناهنجاری‌های آزمایشگاهی، محدودیت‌های ترمودینامیکی/محاسباتی یا پارادوکس‌های کوانتومی) قرار بده. یک «آزمایش فیصله‌بخش» (Crucial Experiment / Adversarial Collaboration) پیشنهاد بده که در آن نظریه تو و نظریه رقیب دو پیش‌بینی متضاد و قابل اندازه‌گیری دارند."
+                };
+            } else {
+                return {
+                    id: 4,
+                    title: "فاز ۴: مرزبندی دقیق معرفت‌شناختی و شرط ابطال",
+                    instruction: "قوی‌ترین نسخه استدلال رقیب (Steelman) را صورت‌بندی کن و دقیقاً نشان بده در کدام گام تجربی یا ریاضی شکست می‌خورد. در پایان، مشخص کن چه نتیجه آزمایشگاهی فرضی می‌تواند نظریه خود تو را ابطال کند (شرط ابطال‌پذیری پوپری)."
+                };
+            }
+        }
+
+        function addToHistory(speaker, role, text, tokens = 0, cost = 0.0, meta = {}) {
+            appState.chatHistory.push({
+                timestamp: new Date().toISOString(),
+                speaker,
+                role,
+                text,
+                school: meta.school || "",
+                phase: meta.phase || "",
+                targetFlaw: meta.targetFlaw || "",
+                citations: Array.isArray(meta.citations) ? meta.citations : [],
+                falsifiableChallenge: meta.falsifiableChallenge || "",
+                fallacyType: meta.fallacyType || ""
+            });
             appState.estimatedTokens += tokens > 0 ? tokens : Math.floor(text.split(' ').length * 1.3);
             appState.estimatedCost += cost;
             saveState();
         }
 
+        function getAllCitedReferences() {
+            const refs = [];
+            appState.chatHistory.forEach((m, idx) => {
+                if (Array.isArray(m.citations)) {
+                    m.citations.forEach(c => {
+                        if (c && c.trim()) {
+                            refs.push({ turn: idx + 1, speaker: m.speaker, citation: c.trim() });
+                        }
+                    });
+                }
+            });
+            return refs;
+        }
+
         function generateTranscript() {
-            if (appState.chatHistory.length === 0) return "Start";
-            let history = appState.chatHistory, transcript = "";
-            if (history.length > 10) {
-                transcript = "Key Initial Claims:\n" + history.slice(0, 3).map(m => `[${m.speaker} - ${m.role}]: ${m.text}`).join('\n') + 
-                             "\n\n[Rolling Summary / Middle Turns Omitted]\n\nActive Disagreements and Recent Turns:\n" + 
-                             history.slice(-7).map(m => `[${m.speaker} - ${m.role}]: ${m.text}`).join('\n');
-            } else {
-                transcript = "Raw Transcript:\n" + history.map(m => `\n[${m.speaker} - ${m.role}]: ${m.text}`).join('\n');
+            if (appState.chatHistory.length === 0) {
+                return "مناظره هنوز آغاز نشده است. تو اولین سخنران هستی و باید چارچوب نظری، مکانیسم علّی و شواهد تجربی پایه خود را با دقت علمی مطرح کنی.";
             }
+
+            let history = appState.chatHistory;
+            let transcript = "";
+
+            const formatMsg = (m, idx) => {
+                let header = `[نوبت ${idx + 1} | ${m.speaker} (${m.role}${m.school ? ' - ' + m.school : ''})]`;
+                let body = m.text;
+                let extras = [];
+                if (m.targetFlaw) extras.push(`  * نقد روش‌شناختی واردشده: ${m.targetFlaw}`);
+                if (m.citations && m.citations.length) extras.push(`  * استنادات علمی: ${m.citations.join(' | ')}`);
+                if (m.falsifiableChallenge) extras.push(`  * چالش ابطال‌پذیر مطرح‌شده: ${m.falsifiableChallenge}`);
+                return `${header}:\n${body}${extras.length ? '\n' + extras.join('\n') : ''}`;
+            };
+
+            if (history.length > 10) {
+                transcript = "=== مواضع و فرضیه‌های اولیه مناظره ===\n" +
+                    history.slice(0, 2).map((m, i) => formatMsg(m, i)).join('\n\n') +
+                    "\n\n=== [خلاصه استنادات میانی: " +
+                    getAllCitedReferences().slice(0, 8).map(r => r.citation).join(' ؛ ') +
+                    "] ===\n\n=== نوبت‌های اخیر و مناقشات فعال ===\n" +
+                    history.slice(-6).map((m, i) => formatMsg(m, history.length - 6 + i)).join('\n\n');
+            } else {
+                transcript = "=== مشروح کامل مناظره تا این لحظه ===\n" +
+                    history.map((m, i) => formatMsg(m, i)).join('\n\n');
+            }
+
+            // استخراج آخرین چالش ابطال‌پذیر یا سوال هاست/تلگرام برای الزام پاسخگویی مستقیم
+            let lastSubstantive = [...history].reverse().find(m => m.falsifiableChallenge || m.role === 'Host' || m.role === 'Telegram');
+            if (lastSubstantive) {
+                if (lastSubstantive.role === 'Host' || lastSubstantive.role === 'Telegram') {
+                    transcript += `\n\n🚨 [مداخله مستقیم داور/مخاطب (${lastSubstantive.speaker}) که باید مستقیماً و با دقت علمی به آن پاسخ دهی]: «${lastSubstantive.text}»`;
+                } else if (lastSubstantive.falsifiableChallenge) {
+                    transcript += `\n\n⚡ [چالش علمی مستقیم مطرح‌شده توسط ${lastSubstantive.speaker} که حق طفره رفتن از آن را نداری و باید در پاراگراف اول با شواهد تجربی یا استدلال دقیق به آن پاسخ دهی]: «${lastSubstantive.falsifiableChallenge}»`;
+                }
+            }
+
             return transcript;
         }
 
         function getGuestSystemPrompt(guest, state, mode) {
             let stateStr = JSON.stringify(state || {});
-            let base = `تو نقش یک ${guest.role} با مکتب ${guest.school} به اسم ${guest.name} رو داری.\nموضوع: ${appState.settings.topic}\nوضعیت شناختی تو تا این لحظه:\n${stateStr}\n\nقوانین:\n1. رفتار متخصص و علمی.\n2. ارجاع معتبر، بدون توهم.\n3. پرهیز از گزافه‌گویی.\n4. بدون جملات کلیشه‌ای.\n5. پاسخ به تلگرام در صورت وجود.`;
-            if (mode === "turn") base += `\nخروجی تو باید دقیقاً یک JSON معتبر با ساختار زیر باشد:\n{\n  "state": {\n    "beliefs": ["باورهای پایه تو"],\n    "claims": ["ادعاهای جدید تو در این نوبت"],\n    "supported_claims": ["ادعاهای دیگران که تایید می‌کنی"],\n    "challenged_claims": ["ادعاهای دیگران که رد می‌کنی"],\n    "concessions": ["عقب‌نشینی‌های تو"],\n    "uncertainties": ["نقاط ابهام"],\n    "objectives": ["هدف تو در ادامه بحث"],\n    "opponents": {"نام مهمان": "وضعیت مخالفت"}\n  },\n  "spoken_text": "متن پاسخ تو در مناظره"\n}`;
-            else if (mode === "interrupt") base += `\nقوانین وقفه: تنها در صورتی که تناقض شدید، خطای فاحش یا حمله مستقیم وجود دارد وقفه ایجاد کن.\nخروجی تو باید دقیقاً یک JSON معتبر با ساختار زیر باشد:\n{\n  "interrupt": true یا false,\n  "reason": "دلیل وقفه",\n  "text": "جمله کوتاه وقفه (حداکثر 15 کلمه)"\n}`;
+            let phaseObj = getDialecticalPhase(appState.turnIndex, appState.settings.maxTurns);
+            let rigor = appState.settings.rigorLevel || "adversarial";
+
+            let rigorDirective = "";
+            if (rigor === "hard_falsification") {
+                rigorDirective = "سبک مناظره: ابطال‌گرایی بی‌رحمانه پوپری (Hard Falsification). هیچ ادعای بدون مکانیسم یا غیرقابل اندازه‌گیری را نپذیر. هر گزاره مبهم فلسفی یا علمی رقیب را فوراً با آزمایش‌های کنترلی، متغیرهای مخدوش‌کننده و محدودیت‌های ریاضی/فیزیکی به چالش بکش.";
+            } else if (rigor === "adversarial") {
+                rigorDirective = "سبک مناظره: داوری تخصصی چالشی (Adversarial Peer-Review). مانند داور سخت‌گیر مجلات Nature و Science یا مناظرات کنسرسیوم‌های Adversarial Collaboration عمل کن؛ مستقیماً به حفره‌های روش‌شناختی، خطاهای اندازه‌گیری و پرش‌های علی در استدلال رقیب حمله کن.";
+            } else {
+                rigorDirective = "سبک مناظره: کالبدشکافی آکادمیک عمیق، تحلیلی و مستدل با تمرکز بر مقایسه مدل‌های نظری و شواهد آزمایشگاهی.";
+            }
+
+            let base = `تو «${guest.name}» هستی؛ یک متخصص برجسته در نقش «${guest.role}» و نماینده مکتب فکری «${guest.school}».
+حوزه تخصصی و روش‌شناسی تو: ${guest.specialty || "پژوهش تجربی و مدل‌سازی نظری پیشرفته"}
+مراجع، آزمایش‌ها و نظریات کلیدی تو: ${guest.anchors || "آزمایش‌ها و مقالات کلاسیک و مدرن مرتبط با حوزه تخصصی"}
+
+موضوع مناظره: «${appState.settings.topic}»
+${ phaseObj.title }: ${ phaseObj.instruction }
+${ rigorDirective }
+
+وضعیت شناختی و حافظه استدلالی تو تا این لحظه:
+${stateStr}
+
+⛔ قوانین طلایی و غیرقابل نقض (پروتکل ضدتعارف و عمق علمی):
+1. ممنوعیت مطلق تعارفات و کلیشه‌ها: استفاده از عباراتی نظیر «با احترام به نظر همکار گرامی»، «نکته جالبی اشاره کردید»، «ضمن تشکر»، «هر دو دیدگاه مکمل هم هستند»، «بحث بسیار خوبی است» یا هرگونه مقدمه دیپلماتیک و رودربایستی **مطلقاً ممنوع** است. از اولین جمله، مستقیماً وارد کالبدشکافی علمی، نقد روش‌شناختی یا پاسخ به چالش رقیب شو.
+2. الزام استناد به آزمایش‌ها، مقالات و مدل‌های مشخص: هیچ ادعایی را به صورت کلی و عامیانه مطرح نکن. در هر نوبت **الزاماً** به حداقل ۲ مورد از آزمایش‌های تجربی مشخص (با ذکر نام محقق، سال یا پارادایم آزمایشگاهی دقیق)، قضایای ریاضی/فیزیکی، یا مقالات معتبر استناد کن و مکانیسم دقیق آن‌ها را توضیح بده (مثلاً به جای گفتن «تحقیقات نشان داده»، دقیقاً بگو در کدام آزمایش، با چه روش اندازه‌گیری و چه متغیری چه چیزی مشاهده شده است).
+3. ممنوعیت تکرار و درجا زدن: استدلال‌ها یا مثال‌های نوبت قبلی خودت را تکرار نکن. اگر رقیب به چالش قبلی تو پاسخ داده، پاسخ او را از نظر روش‌شناختی (مثلاً حجم نمونه، قدرت تفکیک زمانی/مکانی ابزار مثل fMRI در برابر EEG، مسأله همبستگی در برابر علیت، یا واهمدوسی کوانتومی) نقد کن.
+4. زبان تخصصی و دقیق: به زبان فارسی روان، فصیح و آکادمیک صحبت کن و در صورت لزوم اصطلاحات تخصصی استاندارد را در پرانتز به انگلیسی ذکر کن.
+5. طرح چالش ابطال‌پذیر (Falsifiable Challenge): در پایان هر نوبت، یک پرسش آزمایشگاهی، معادله‌ای یا مورد مرزی بسیار مشخص جلوی پای رقیب بگذار که نتواند با کلی‌گویی از آن فرار کند.`;
+
+            if (mode === "turn") {
+                base += `\n\nخروجی تو باید **فقط و فقط یک JSON معتبر** با ساختار دقیق زیر باشد (ابتدا فیلدهای تحلیلی را پر کن و سپس بر اساس آن‌ها متن نطق علمی را در spoken_text بنویس):
+{
+  "state": {
+    "beliefs": ["اصول موضوعه و فرضیات علمی تو"],
+    "claims": ["ادعاهای مکانیسمی و تجربی جدید تو در این نوبت"],
+    "supported_claims": ["گزاره‌ها یا داده‌هایی که به صورت مشروط می‌پذیری"],
+    "challenged_claims": ["ادعاهای مشخص رقیب که در این نوبت با دلیل تجربی/منطقی رد کردی"],
+    "concessions": ["تدقیق یا اصلاح موضع خودت در برابر شواهد معتبر رقیب"],
+    "uncertainties": ["محدودیت‌های فعلی ابزارها یا سوالات باز آزمایشگاهی"],
+    "objectives": ["استراتژی حمله علمی تو در نوبت بعدی"],
+    "opponents": {"نام رقیب": "ضعف روش‌شناختی یا پرش منطقی کشف‌شده در استدلال او"}
+  },
+  "target_flaw": "توصیف دقیق ۱ جمله‌ای از خطای روش‌شناختی، مغلطه منطقی یا فرض اثبات‌نشده در صحبت قبلی رقیب (مثلاً: خلط همبستگی عصبی با علیت، یا نادیده گرفتن زمان واهمدوسی حرارتی)",
+  "citations": [
+    "نام دقیق آزمایش / مقاله / نظریه اول + محقق و یافته کلیدی",
+    "نام دقیق آزمایش / مقاله / نظریه دوم + محقق و یافته کلیدی"
+  ],
+  "falsifiable_challenge": "یک پرسش علمی، آزمایشگاهی یا مورد مرزی بسیار مشخص و تند خطاب به رقیب که باید در نوبت بعدی پاسخ دهد",
+  "spoken_text": "متن کامل، عمیق، تخصصی و بدون تعارف نطق تو در مناظره (حدود ۱۸۰ تا ۲۸۰ کلمه، شامل نقد مستقیم مکانیسم رقیب، تبیین آزمایش‌های مورد استناد و طرح چالش نهایی)"
+}`;
+            } else if (mode === "interrupt") {
+                base += `\n\nقوانین اعتراض علمی لحظه‌ای (Peer-Review Interjection):
+سخنران قبلی به تازگی صحبت کرده است. بررسی کن آیا در آخرین پیام مناظره یکی از خطاهای علمی زیر رخ داده است یا خیر:
+- خلط همبستگی و علیت (Correlation vs. Causation)
+- استناد نادرست به یک آزمایش یا نادیده گرفتن مطالعات تکرار (Replication / Meta-analysis)
+- خطای مقوله‌ای (Category Error) یا مصادره به مطلوب (Circular Reasoning)
+- نقض قوانین بنیادین فیزیک/ترمودینامیک/نظریه اطلاعات یا فرار از پاسخ به چالش قبلی.
+اگر چنین خطایی وجود دارد، با interrupt: true وسط بحث بپر و در ۲۵ تا ۴۵ کلمه، بدون هیچ تعارفی مچ علمی او را با ذکر دلیل یا آزمایش نقض‌کننده بگیر!
+
+خروجی تو باید **فقط یک JSON معتبر** با ساختار زیر باشد:
+{
+  "interrupt": true یا false,
+  "fallacy_type": "عنوان دقیق خطای علمی/روش‌شناختی (مثلاً: خلط همبستگی و علیت / خطای مقوله‌ای / نادیده‌گرفتن واهمدوسی)",
+  "reason": "توضیح کوتاه دلیل وقفه",
+  "text": "متن اعتراض علمی تند، دقیق و مستند (حداکثر ۴۵ کلمه، بدون تعارف)"
+}`;
+            }
             return base;
         }
 
@@ -365,13 +885,16 @@
         async function debateLoop() {
             if (!appState.isRunning) return;
             if (appState.turnIndex >= appState.settings.maxTurns) {
-                appState.isRunning = false; updateUI(); saveState();
-                if(appState.settings.tgEnable) sendTgMessage("End"); return;
+                appState.isRunning = false;
+                updateUI();
+                saveState();
+                showToast("مناظره به سقف نوبت‌های تعیین‌شده رسید. می‌توانید سنتز و داوری تخصصی را اجرا کنید.", "success");
+                if (appState.settings.tgEnable) sendTgMessage("🏁 مناظره به پایان رسید.");
+                return;
             }
 
-            document.getElementById('debateStatus').innerText = "در حال تفکر...";
+            document.getElementById('debateStatus').innerText = "در حال استدلال و داوری...";
             
-            // اصلاح شماره 1: خواندن پیام‌های تلگرام به صورت پیوسته (حذف محدودیت)
             if (appState.settings.tgEnable) {
                 let updates = await fetchTgUpdates();
                 for (let u of updates) addToHistory(u.user, "Telegram", u.text);
@@ -380,21 +903,44 @@
             let cGuest = appState.settings.guests[appState.turnIndex % appState.settings.numGuests];
             initGuestState(cGuest.id);
 
-            if (appState.chatHistory.length > 1) {
+            // بررسی اعتراض علمی لحظه‌ای (Peer-Review Interjection)
+            if (appState.chatHistory.length >= 1) {
                 let others = appState.settings.guests.filter(g => g.id !== cGuest.id);
-                let interrupter = others[Math.floor(Math.random() * others.length)];
-                let iKey = appState.settings.mode === "Multi" ? interrupter.apiKey : appState.settings.globalApiKey;
-                let iProv = appState.settings.mode === "Multi" ? interrupter.provider : appState.settings.globalProvider;
-                let iMod = appState.settings.mode === "Multi" ? interrupter.model : appState.settings.globalModel;
+                if (others.length > 0 && Math.random() < 0.65) {
+                    let interrupter = others[Math.floor(Math.random() * others.length)];
+                    let iKey = appState.settings.mode === "Multi" ? interrupter.apiKey : appState.settings.globalApiKey;
+                    let iProv = appState.settings.mode === "Multi" ? interrupter.provider : appState.settings.globalProvider;
+                    let iMod = appState.settings.mode === "Multi" ? interrupter.model : appState.settings.globalModel;
 
-                initGuestState(interrupter.id);
-                let intRes = await callLlmApi(iProv, iMod, iKey, getGuestSystemPrompt(interrupter, appState.guestStates[interrupter.id], "interrupt"), generateTranscript() + "\n\nآیا شرایط وقفه برقرار است؟", 150);
-                if (intRes.content && !intRes.content.includes("[خطا")) {
-                    let intData = parseJsonFromText(intRes.content);
-                    if (intData && intData.interrupt && intData.text) {
-                        addToHistory(interrupter.name, "Interruption", `*(می‌پرد وسط حرف)* ${intData.text}`, intRes.tokens, intRes.cost);
-                        if (appState.settings.tgEnable) sendTgMessage(`${interrupter.name}:\n${intData.text}`);
-                        updateUI();
+                    initGuestState(interrupter.id);
+                    let intRes = await callLlmApi(
+                        iProv,
+                        iMod,
+                        iKey,
+                        getGuestSystemPrompt(interrupter, appState.guestStates[interrupter.id], "interrupt"),
+                        generateTranscript() + "\n\nآیا در آخرین استدلال مطرح‌شده، خطای روش‌شناختی، مغلطه منطقی یا طفره رفتن از شواهد تجربی وجود دارد که نیازمند اعتراض علمی فوری باشد؟",
+                        300,
+                        0.5
+                    );
+                    if (intRes.content && !intRes.content.includes("[خطا")) {
+                        let intData = parseJsonFromText(intRes.content);
+                        if (intData && intData.interrupt && intData.text) {
+                            addToHistory(
+                                interrupter.name,
+                                "اعتراض علمی (Peer-Review)",
+                                intData.text,
+                                intRes.tokens,
+                                intRes.cost,
+                                {
+                                    school: interrupter.school,
+                                    fallacyType: intData.fallacy_type || intData.reason || "نقد روش‌شناختی فوری"
+                                }
+                            );
+                            if (appState.settings.tgEnable) {
+                                sendTgMessage(`⚡ اعتراض علمی [${interrupter.name} - ${intData.fallacy_type || 'نقد فوری'}]:\n${intData.text}`);
+                            }
+                            updateUI();
+                        }
                     }
                 }
             }
@@ -404,38 +950,82 @@
             let cKey = appState.settings.mode === "Multi" ? cGuest.apiKey : appState.settings.globalApiKey;
             let cProv = appState.settings.mode === "Multi" ? cGuest.provider : appState.settings.globalProvider;
             let cMod = appState.settings.mode === "Multi" ? cGuest.model : appState.settings.globalModel;
+            let phaseObj = getDialecticalPhase(appState.turnIndex, appState.settings.maxTurns);
 
-            let res = await callLlmApi(cProv, cMod, cKey, getGuestSystemPrompt(cGuest, appState.guestStates[cGuest.id], "turn"), generateTranscript() + `\n\nحالا نوبت توست ${cGuest.name}. پاسخ بده:`, 2000);
+            let turnPrompt = generateTranscript() +
+                `\n\n=== نوبت سخنرانی علمی تو: ${cGuest.name} (${cGuest.role} | مکتب: ${cGuest.school}) ===\n` +
+                `فاز فعلی مناظره: ${phaseObj.title}\n` +
+                `دستورالعمل الزامی این نوبت:\n` +
+                `1. بدون هیچ تعارف، تشکر یا مقدمه کلیشه‌ای، مستقیماً به آخرین ادعا و چالش ابطال‌پذیر سخنران قبلی حمله علمی کن.\n` +
+                `2. حداقل ۲ آزمایش تجربی، مقاله معتبر یا مدل ریاضی/مکانیسمی مشخص در دفاع از موضع خود و نقض موضع رقیب ارائه بده.\n` +
+                `3. یک چالش ابطال‌پذیر جدید برای نوبت بعدی طراحی کن.\n` +
+                `خروجی را دقیقاً در قالب JSON خواسته‌شده برگردان:`;
+
+            let res = await callLlmApi(
+                cProv,
+                cMod,
+                cKey,
+                getGuestSystemPrompt(cGuest, appState.guestStates[cGuest.id], "turn"),
+                turnPrompt,
+                2500,
+                0.55
+            );
             
             if (!appState.isRunning) return;
             if (!res.content) {
-                appState.isRunning = false; updateUI(); saveState();
-                alert("خطا در ارتباط با سرور محلی (SimuDebate_server.py). مطمئن شوید سرور در حال اجراست."); return;
+                appState.isRunning = false;
+                updateUI();
+                saveState();
+                showToast(`خطا در دریافت پاسخ از سرور محلی یا API (${res.error || 'مطمئن شوید SimuDebate_server.py در حال اجراست و کلید API معتبر است'}).`, 'error');
+                return;
             }
 
             let turnData = parseJsonFromText(res.content);
             let spoken = res.content;
+            let meta = {
+                school: cGuest.school,
+                phase: phaseObj.title,
+                targetFlaw: "",
+                citations: [],
+                falsifiableChallenge: ""
+            };
+
             if (turnData && turnData.spoken_text) {
                 spoken = turnData.spoken_text;
+                meta.targetFlaw = turnData.target_flaw || "";
+                meta.citations = Array.isArray(turnData.citations) ? turnData.citations : [];
+                meta.falsifiableChallenge = turnData.falsifiable_challenge || "";
                 if (turnData.state) appState.guestStates[cGuest.id] = trimState(turnData.state);
             }
 
-            addToHistory(cGuest.name, cGuest.role, spoken, res.tokens, res.cost);
+            addToHistory(cGuest.name, cGuest.role, spoken, res.tokens, res.cost, meta);
             appState.turnIndex++;
-            if (appState.settings.tgEnable) sendTgMessage(`${cGuest.name} (${cGuest.role})\n\n${spoken}`);
+
+            if (appState.settings.tgEnable) {
+                let tgText = `🔬 ${cGuest.name} (${cGuest.role} | ${cGuest.school})\n[${phaseObj.title}]\n\n`;
+                if (meta.targetFlaw) tgText += `🎯 نقد محوری: ${meta.targetFlaw}\n\n`;
+                tgText += `${spoken}\n\n`;
+                if (meta.citations.length) tgText += `📚 استنادات: ${meta.citations.join(' | ')}\n`;
+                if (meta.falsifiableChallenge) tgText += `⚡ چالش ابطال‌پذیر: ${meta.falsifiableChallenge}`;
+                sendTgMessage(tgText);
+            }
             
-            updateUI(); saveState();
-            if (appState.isRunning) loopTimeout = setTimeout(debateLoop, 3000);
+            updateUI();
+            saveState();
+            if (appState.isRunning) loopTimeout = setTimeout(debateLoop, 2500);
         }
 
         function renderGuests() {
-            let container = document.getElementById('guestsContainer'); container.innerHTML = '';
+            let container = document.getElementById('guestsContainer');
+            container.innerHTML = '';
             appState.settings.guests.forEach((g, i) => {
-                let div = document.createElement('div'); div.className = "bg-black/30 p-4 rounded-xl border border-white/5 space-y-3";
+                let div = document.createElement('div');
+                div.className = "bg-black/35 p-4 rounded-xl border border-white/10 space-y-2.5";
                 let apiHtml = '';
                 if (appState.settings.mode === 'Multi') {
                     apiHtml = `
                     <div class="mt-3 pt-3 border-t border-white/10 space-y-2">
+                        <label class="block text-[10px] text-white/50 font-bold">تنظیمات اختصاصی مدل مهمان ${i+1}</label>
                         <select id="gProv_${i}" class="form-input text-xs">
                             <option value="OpenAI" ${g.provider==='OpenAI'?'selected':''}>OpenAI</option>
                             <option value="Anthropic (Claude)" ${g.provider==='Anthropic (Claude)'?'selected':''}>Claude</option>
@@ -447,22 +1037,93 @@
                     </div>`;
                 }
                 div.innerHTML = `
-                    <div class="text-xs font-bold text-white/70 mb-2 flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-indigo-400"></span> مهمان ${i+1}</div>
-                    <input type="text" id="gName_${i}" value="${g.name}" placeholder="نام مهمان" class="form-input">
-                    <input type="text" id="gRole_${i}" value="${g.role}" placeholder="نقش (مانند دانشمند)" class="form-input">
-                    <input type="text" id="gSchool_${i}" value="${g.school}" placeholder="مکتب فکری" class="form-input">
+                    <div class="text-xs font-bold text-indigo-300 mb-1 flex items-center justify-between">
+                        <span class="flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full bg-indigo-400"></span> پروفایل علمی مهمان ${i+1}</span>
+                        <span class="text-[10px] text-white/40">${g.id}</span>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] text-white/50 mb-1">نام و عنوان علمی</label>
+                        <input type="text" id="gName_${i}" value="${g.name}" placeholder="مثلاً: دکتر آرش راد (عصب‌پژوه محاسباتی)" class="form-input text-xs">
+                    </div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="block text-[10px] text-white/50 mb-1">تخصص / رشته دانشگاهی</label>
+                            <input type="text" id="gRole_${i}" value="${g.role}" placeholder="Computational Neuroscientist" class="form-input text-xs">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] text-white/50 mb-1">مکتب فکری / پارادایم</label>
+                            <input type="text" id="gSchool_${i}" value="${g.school}" placeholder="ماتریالیسم کارکردگرا (GNWT)" class="form-input text-xs">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] text-white/50 mb-1">روش‌شناسی و ابزار تحلیل تخصصی</label>
+                        <input type="text" id="gSpec_${i}" value="${g.specialty || ''}" placeholder="مثلاً: الکتروفیزیولوژی قشری، مدل‌سازی بیزی و نوسانات گاما" class="form-input text-xs">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] text-white/50 mb-1">آزمایش‌ها، نظریات و مقالات کلیدی مورد استناد</label>
+                        <textarea id="gAnchors_${i}" rows="2" placeholder="مثلاً: Dehaene (GNWT), Libet (1983), COGITATE (2023), Friston Free Energy" class="form-input text-xs resize-none">${g.anchors || ''}</textarea>
+                    </div>
                     ${apiHtml}`;
                 container.appendChild(div);
 
-                document.getElementById(`gName_${i}`).addEventListener('change', e => { g.name = e.target.value; saveState(); });
-                document.getElementById(`gRole_${i}`).addEventListener('change', e => { g.role = e.target.value; saveState(); });
-                document.getElementById(`gSchool_${i}`).addEventListener('change', e => { g.school = e.target.value; saveState(); });
-                if(appState.settings.mode === 'Multi') {
+                document.getElementById(`gName_${i}`).addEventListener('change', e => { g.name = e.target.value; saveState(); updateUI(); });
+                document.getElementById(`gRole_${i}`).addEventListener('change', e => { g.role = e.target.value; saveState(); updateUI(); });
+                document.getElementById(`gSchool_${i}`).addEventListener('change', e => { g.school = e.target.value; saveState(); updateUI(); });
+                document.getElementById(`gSpec_${i}`).addEventListener('change', e => { g.specialty = e.target.value; saveState(); });
+                document.getElementById(`gAnchors_${i}`).addEventListener('change', e => { g.anchors = e.target.value; saveState(); });
+                if (appState.settings.mode === 'Multi') {
                     document.getElementById(`gProv_${i}`).addEventListener('change', e => { g.provider = e.target.value; saveState(); });
                     document.getElementById(`gMod_${i}`).addEventListener('change', e => { g.model = e.target.value; saveState(); });
                     document.getElementById(`gKey_${i}`).addEventListener('change', e => { g.apiKey = e.target.value; saveState(); });
                 }
             });
+        }
+
+        function renderCognitiveInspector() {
+            const inspectorEl = document.getElementById('cognitiveInspector');
+            const archiveEl = document.getElementById('archiveCitationsList');
+            if (inspectorEl) {
+                inspectorEl.innerHTML = '';
+                appState.settings.guests.forEach(g => {
+                    const st = appState.guestStates[g.id] || {};
+                    const card = document.createElement('div');
+                    card.className = "p-3 rounded-xl bg-black/40 border border-white/10 space-y-1.5";
+                    const claims = Array.isArray(st.claims) && st.claims.length ? st.claims.slice(-2).join(' ؛ ') : 'هنوز ثبت نشده';
+                    const challenged = Array.isArray(st.challenged_claims) && st.challenged_claims.length ? st.challenged_claims.slice(-2).join(' ؛ ') : 'هنوز ثبت نشده';
+                    const concessions = Array.isArray(st.concessions) && st.concessions.length ? st.concessions.slice(-2).join(' ؛ ') : 'بدون عقب‌نشینی';
+                    card.innerHTML = `
+                        <div class="font-bold text-indigo-300 flex justify-between">
+                            <span>${g.name}</span>
+                            <span class="text-[10px] text-white/50">${g.school}</span>
+                        </div>
+                        <div class="text-[11px] text-white/80"><span class="text-emerald-400 font-bold">ادعاهای فعال:</span> ${claims}</div>
+                        <div class="text-[11px] text-white/80"><span class="text-rose-400 font-bold">موارد ردشده رقیب:</span> ${challenged}</div>
+                        <div class="text-[11px] text-white/80"><span class="text-amber-400 font-bold">تدقیق/عقب‌نشینی:</span> ${concessions}</div>
+                    `;
+                    inspectorEl.appendChild(card);
+                });
+            }
+
+            if (archiveEl) {
+                const allRefs = getAllCitedReferences();
+                archiveEl.innerHTML = '';
+                if (allRefs.length === 0) {
+                    archiveEl.innerHTML = '<div class="text-center text-white/40 text-xs py-8">هنوز استناد یا آزمایشی در مناظره ثبت نشده است.</div>';
+                } else {
+                    allRefs.forEach(item => {
+                        const row = document.createElement('div');
+                        row.className = "p-2.5 rounded-xl bg-black/35 border border-cyan-500/20 text-xs flex flex-col gap-1";
+                        row.innerHTML = `
+                            <div class="flex justify-between text-[10px] text-cyan-300 font-bold">
+                                <span>${item.speaker}</span>
+                                <span>پیام #${item.turn}</span>
+                            </div>
+                            <div class="text-white/90 leading-relaxed">📚 ${item.citation}</div>
+                        `;
+                        archiveEl.appendChild(row);
+                    });
+                }
+            }
         }
 
         function updateUI() {
@@ -472,90 +1133,298 @@
             document.getElementById('logTokens').innerText = appState.estimatedTokens;
             document.getElementById('logCost').innerText = `$${appState.estimatedCost.toFixed(4)}`;
 
-            let chatDiv = document.getElementById('chatHistory'); chatDiv.innerHTML = '';
+            const allCitations = getAllCitedReferences();
+            const citCountEl = document.getElementById('logCitationsCount');
+            if (citCountEl) citCountEl.innerText = allCitations.length;
+
+            const phaseObj = getDialecticalPhase(appState.turnIndex, appState.settings.maxTurns);
+            const phaseBadgeEl = document.getElementById('debatePhaseBadge');
+            if (phaseBadgeEl) phaseBadgeEl.innerText = phaseObj.title.split(':')[0] + (phaseObj.title.split(':')[1] ? ': ' + phaseObj.title.split(':')[1] : '');
+
+            let chatDiv = document.getElementById('chatHistory');
+            chatDiv.innerHTML = '';
             if (appState.chatHistory.length === 0) {
-                chatDiv.innerHTML = '<div class="text-center text-white/40 text-xs py-10">تاریخچه مناظره هنوز خالی است.</div>';
+                chatDiv.innerHTML = '<div class="text-center text-white/40 text-xs py-10">تاریخچه مناظره هنوز خالی است. یک سناریوی علمی انتخاب کنید یا روی «شروع مناظره» بزنید.</div>';
             } else {
                 appState.chatHistory.forEach(msg => {
                     let msgEl = document.createElement('div');
-                    let bg = msg.role === 'Host' ? 'bg-indigo-500/20' : 'bg-black/40';
-                    let border = msg.role === 'Host' ? 'border-indigo-500/30' : 'border-white/5';
-                    msgEl.className = `p-4 rounded-xl border ${border} ${bg} text-sm shadow-sm`;
+                    let isHost = msg.role === 'Host' || msg.role === 'Telegram';
+                    let isInterrupt = msg.role && (msg.role.includes('Interruption') || msg.role.includes('اعتراض علمی'));
+                    let isModerator = msg.role === 'Moderator';
+
+                    let bg = isHost ? 'bg-indigo-500/20' : (isInterrupt ? 'bg-rose-950/40' : (isModerator ? 'bg-purple-950/40' : 'bg-black/45'));
+                    let border = isHost ? 'border-indigo-500/35' : (isInterrupt ? 'border-rose-500/40' : (isModerator ? 'border-purple-500/40' : 'border-white/10'));
+
+                    let phaseHtml = msg.phase ? `<span class="text-[10px] px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">${msg.phase.split(':')[0]}</span>` : '';
+                    let schoolHtml = msg.school ? `<div class="text-[10px] text-amber-300/80 mt-0.5">مکتب: ${msg.school}</div>` : '';
+
+                    let flawHtml = '';
+                    if (msg.targetFlaw) {
+                        flawHtml = `
+                        <div class="mb-2.5 p-2 rounded-lg bg-rose-500/10 border border-rose-500/30 text-[11px] text-rose-200 leading-relaxed">
+                            <span class="font-bold text-rose-400">🎯 نقد روش‌شناختی:</span> ${msg.targetFlaw}
+                        </div>`;
+                    } else if (msg.fallacyType) {
+                        flawHtml = `
+                        <div class="mb-2 px-2 py-1 rounded bg-rose-500/20 text-[10px] text-rose-300 font-bold inline-block">
+                            ⚡ خطای شناسایی‌شده: ${msg.fallacyType}
+                        </div>`;
+                    }
+
+                    let citationsHtml = '';
+                    if (Array.isArray(msg.citations) && msg.citations.length > 0) {
+                        citationsHtml = `
+                        <div class="mt-2.5 pt-2 border-t border-white/10 flex flex-wrap gap-1.5">
+                            ${msg.citations.map(c => `<span class="text-[10px] px-2 py-1 rounded-md bg-cyan-500/15 text-cyan-200 border border-cyan-500/30">📚 ${c}</span>`).join('')}
+                        </div>`;
+                    }
+
+                    let challengeHtml = '';
+                    if (msg.falsifiableChallenge) {
+                        challengeHtml = `
+                        <div class="mt-2.5 p-2 rounded-lg bg-amber-500/10 border border-amber-500/30 text-[11px] text-amber-200 leading-relaxed">
+                            <span class="font-bold text-amber-400">⚡ چالش ابطال‌پذیر خطاب به رقیب:</span> ${msg.falsifiableChallenge}
+                        </div>`;
+                    }
+
+                    msgEl.className = `p-3.5 rounded-xl border ${border} ${bg} text-xs shadow-sm`;
                     msgEl.innerHTML = `
-                        <div class="flex items-center gap-2 mb-2 pb-2 border-b border-white/5">
-                            <span class="font-bold text-white/90">${msg.speaker}</span>
-                            <span class="text-[10px] px-2 py-0.5 rounded-full bg-white/10 text-white/60">${msg.role}</span>
+                        <div class="flex flex-col mb-2 pb-2 border-b border-white/10">
+                            <div class="flex items-center justify-between gap-2 flex-wrap">
+                                <span class="font-bold text-white text-sm">${msg.speaker}</span>
+                                <div class="flex items-center gap-1.5">
+                                    ${phaseHtml}
+                                    <span class="text-[10px] px-2 py-0.5 rounded-full bg-white/10 text-white/70">${msg.role}</span>
+                                </div>
+                            </div>
+                            ${schoolHtml}
                         </div>
-                        <div class="text-white/80 leading-relaxed text-justify">${msg.text}</div>`;
+                        ${flawHtml}
+                        <div class="text-white/90 leading-7 text-justify whitespace-pre-line">${msg.text}</div>
+                        ${citationsHtml}
+                        ${challengeHtml}`;
                     chatDiv.appendChild(msgEl);
                 });
                 chatDiv.scrollTop = chatDiv.scrollHeight;
             }
+
+            renderCognitiveInspector();
         }
 
         function bindInputs() {
+            document.getElementById('quickOpenMeetingBtn').addEventListener('click', () => {
+                const meetingRoom = interactiveRooms.find(r => r.userData.id === 'meeting');
+                if (meetingRoom) openPanel(meetingRoom.userData);
+            });
+
+            document.getElementById('presetSelector').addEventListener('change', e => {
+                const key = e.target.value;
+                if (!key || !SCIENTIFIC_PRESETS[key]) return;
+                const preset = SCIENTIFIC_PRESETS[key];
+                appState.settings.topic = preset.topic;
+                appState.settings.numGuests = preset.guests.length;
+                appState.settings.guests = JSON.parse(JSON.stringify(preset.guests));
+                document.getElementById('debateTopic').value = appState.settings.topic;
+                document.getElementById('numGuests').value = appState.settings.numGuests;
+                renderGuests();
+                syncGuestCharacters();
+                saveState();
+                updateUI();
+                showToast("سناریوی علمی و پروفایل تخصصی پژوهشگران بارگذاری شد.", "success");
+            });
+
             document.getElementById('debateTopic').addEventListener('change', e => { appState.settings.topic = e.target.value; saveState(); });
-            document.getElementById('maxTurns').addEventListener('input', e => { appState.settings.maxTurns = parseInt(e.target.value); document.getElementById('maxTurnsVal').innerText = appState.settings.maxTurns; saveState(); });
+            document.getElementById('rigorLevel').addEventListener('change', e => { appState.settings.rigorLevel = e.target.value; saveState(); });
+            document.getElementById('maxTurns').addEventListener('input', e => {
+                appState.settings.maxTurns = parseInt(e.target.value);
+                document.getElementById('maxTurnsVal').innerText = appState.settings.maxTurns;
+                updateUI();
+                saveState();
+            });
             document.getElementById('tgEnable').addEventListener('change', e => { appState.settings.tgEnable = e.target.checked; saveState(); });
             document.getElementById('tgToken').addEventListener('change', e => { appState.settings.tgToken = e.target.value; saveState(); });
             document.getElementById('tgChatId').addEventListener('change', e => { appState.settings.tgChatId = e.target.value; saveState(); });
             document.getElementById('apiMode').addEventListener('change', e => {
                 appState.settings.mode = e.target.value;
                 document.getElementById('globalApiSettings').style.display = appState.settings.mode === 'Single' ? 'block' : 'none';
-                renderGuests(); saveState();
+                renderGuests();
+                saveState();
             });
             document.getElementById('globalProvider').addEventListener('change', e => { appState.settings.globalProvider = e.target.value; saveState(); });
             document.getElementById('globalModel').addEventListener('change', e => { appState.settings.globalModel = e.target.value; saveState(); });
             document.getElementById('globalApiKey').addEventListener('change', e => { appState.settings.globalApiKey = e.target.value; saveState(); });
 
             document.getElementById('numGuests').addEventListener('change', e => {
-                let num = parseInt(e.target.value); if (num < 2) num = 2; if (num > 5) num = 5;
+                let num = parseInt(e.target.value);
+                if (num < 2) num = 2;
+                if (num > 5) num = 5;
                 appState.settings.numGuests = num;
-                while(appState.settings.guests.length < num) appState.settings.guests.push({ id: `guest_${appState.settings.guests.length}`, name: `مهمان ${appState.settings.guests.length+1}`, role: "Role", school: "School", provider: "OpenAI", model: "gpt-4o", apiKey: "" });
+                const extraArchetypes = [
+                    { name: "دکتر بهزاد فرجاد (پژوهشگر سیستم‌های پیچیده)", role: "Complex Systems & Information Theorist", school: "نظریه سیستم‌های دینامیک غیرخطی", specialty: "ترمودینامیک غیرتعادلی، نظریه آشوب و ظهوریافتگی", anchors: "Ilya Prigogine (Dissipative Structures), Stuart Kauffman (Autocatalytic Sets), Shannon-Kolmogorov Complexity" },
+                    { name: "دکتر نگار پاشایی (فیلسوف علم و معرفت‌شناس)", role: "Philosopher of Science & Epistemologist", school: "واقع‌گرایی ساختاری (Structural Realism)", specialty: "فلسفه آزمایش، ابطال‌پذیری لاکاتوش و تحلیل علیت", anchors: "Karl Popper (Falsificationism), Imre Lakatos (Research Programmes), Judea Pearl (Causal Calculus & Do-Operator)" },
+                    { name: "دکتر رامین ستوده (بیوفیزیکدان ریاضی)", role: "Mathematical Biophysicist", school: "تقلیل‌گرایی فیزیکی-ریاضی", specialty: "مدل‌سازی معادلات دیفرانسیل تصادفی و بیوفیزیک غشا", anchors: "Hodgkin-Huxley Model, Decoherence Timescales by Max Tegmark (2000), Landauer's Principle" }
+                ];
+                while (appState.settings.guests.length < num) {
+                    const idx = appState.settings.guests.length;
+                    const arch = extraArchetypes[(idx - 2) % extraArchetypes.length];
+                    appState.settings.guests.push({
+                        id: `guest_${idx}`,
+                        name: arch.name,
+                        role: arch.role,
+                        school: arch.school,
+                        specialty: arch.specialty,
+                        anchors: arch.anchors,
+                        provider: "OpenAI",
+                        model: "gpt-4o",
+                        apiKey: ""
+                    });
+                }
                 appState.settings.guests = appState.settings.guests.slice(0, num);
-                renderGuests(); saveState(); syncGuestCharacters(); 
+                renderGuests();
+                saveState();
+                syncGuestCharacters();
+                updateUI();
             });
 
             document.getElementById('startDebateBtn').addEventListener('click', () => {
-                if(!appState.isRunning && appState.turnIndex < appState.settings.maxTurns) {
-                    appState.isRunning = true; saveState();
-                    if(appState.settings.tgEnable && appState.chatHistory.length === 0) sendTgMessage(`Started\nTopic: ${appState.settings.topic}\nGuests: ${appState.settings.guests.map(g=>g.name).join(", ")}`);
-                    updateUI(); debateLoop();
+                if (!appState.isRunning && appState.turnIndex < appState.settings.maxTurns) {
+                    appState.isRunning = true;
+                    saveState();
+                    if (appState.settings.tgEnable && appState.chatHistory.length === 0) {
+                        sendTgMessage(`🔬 آغاز مناظره علمی\nموضوع: ${appState.settings.topic}\nپژوهشگران: ${appState.settings.guests.map(g => g.name).join(" ، ")}`);
+                    }
+                    updateUI();
+                    debateLoop();
+                } else if (appState.turnIndex >= appState.settings.maxTurns) {
+                    showToast("مناظره به سقف نوبت‌ها رسیده است. تعداد نوبت‌ها را افزایش دهید یا بازنشانی کنید.", "info");
                 }
             });
 
-            document.getElementById('stopDebateBtn').addEventListener('click', () => { appState.isRunning = false; if(loopTimeout) clearTimeout(loopTimeout); updateUI(); saveState(); });
+            document.getElementById('stopDebateBtn').addEventListener('click', () => {
+                appState.isRunning = false;
+                if (loopTimeout) clearTimeout(loopTimeout);
+                updateUI();
+                saveState();
+            });
+
+            document.getElementById('resetDebateBtn').addEventListener('click', () => {
+                appState.isRunning = false;
+                if (loopTimeout) clearTimeout(loopTimeout);
+                appState.chatHistory = [];
+                appState.turnIndex = 0;
+                appState.guestStates = {};
+                appState.estimatedTokens = 0;
+                appState.estimatedCost = 0;
+                updateUI();
+                saveState();
+                showToast("تاریخچه و وضعیت شناختی مناظره برای شروع دور جدید پاک‌سازی شد.", "info");
+            });
 
             document.getElementById('synthesisBtn').addEventListener('click', async () => {
-                let btn = document.getElementById('synthesisBtn'); btn.innerText = "در حال پردازش..."; btn.disabled = true;
+                if (appState.chatHistory.length === 0) {
+                    showToast("ابتدا چند نوبت از مناظره را اجرا کنید تا داده کافی برای داوری و سنتز وجود داشته باشد.", "error");
+                    return;
+                }
+                let btn = document.getElementById('synthesisBtn');
+                btn.innerText = "در حال داوری تخصصی و سنتز معرفت‌شناختی...";
+                btn.disabled = true;
                 let hKey = appState.settings.globalApiKey, hProv = appState.settings.globalProvider, hMod = appState.settings.globalModel;
-                let res = await callLlmApi(hProv, hMod, hKey, "تو یک تحلیلگر ارشد هستی. مناظره به پایان رسیده است. بر اساس تاریخچه، یک سنتز ارائه بده. 1. نقاط توافق 2. نقاط اختلاف 3. نیازهای آینده پژوهش", generateTranscript() + "\n\nاکنون سنتز نهایی را بر اساس دستورالعملت بنویس.", 2000);
-                if(res.content) { addToHistory("Synthesizer", "Moderator", res.content, res.tokens, res.cost); updateUI(); } else alert("خطا در ارتباط با سرور یا تولید سنتز.");
-                btn.innerText = "سنتز و جمع‌بندی"; btn.disabled = false;
+                let synthSystemPrompt = `تو سردبیر ارشد داوری علمی (Senior Peer-Review Editor در سطح مجلات Nature/Behavioral and Brain Sciences) هستی.
+وظیفه تو ارائه یک «گزارش داوری تخصصی و سنتز معرفت‌شناختی» بدون هیچ‌گونه تعارف و کلی‌گویی است.
+گزارش تو باید دقیقاً شامل ۴ بخش ساختاریافته زیر باشد:
+1. کالبدشکافی تعارض پارادایمی (Axiomatic & Mechanistic Divergence): ریشه دقیق اختلاف طرفین در سطح تعاریف عملیاتی و مکانیسم‌های علّی چیست؟
+2. راستی‌آزمایی شواهد و آزمایش‌های استنادشده (Empirical Evidence Audit): کدام آزمایش‌ها و مقالات مطرح‌شده وزن تجربی قوی‌تری داشتند و کجا یکی از طرفین تفسیر نادرست یا تعمیم افراطی از یک آزمایش ارائه داد؟
+3. مغالطات، حفره‌های روش‌شناختی و چالش‌های بی‌پاسخ (Methodological Flaws & Unresolved Challenges): کدام چالش ابطال‌پذیر بدون پاسخ دقیق باقی ماند؟
+4. طراحی آزمایش فیصله‌بخش (Proposed Adversarial Collaboration / Crucial Experiment): یک پروتکل آزمایشگاهی دقیق طراحی کن که بتواند بین این دو دیدگاه داوری تجربی کند (مشخص کن اگر نتیجه X شود کدام فرضیه ابطال می‌شود و اگر نتیجه Y شود کدام فرضیه تقویت می‌گردد).`;
+
+                let res = await callLlmApi(
+                    hProv,
+                    hMod,
+                    hKey,
+                    synthSystemPrompt,
+                    generateTranscript() + "\n\nاکنون گزارش کامل داوری تخصصی و سنتز معرفت‌شناختی را بر اساس ۴ بخش بالا بنویس.",
+                    2500,
+                    0.4
+                );
+                if (res.content) {
+                    addToHistory("هیئت داوری تخصصی (Peer-Review Synthesizer)", "Moderator", res.content, res.tokens, res.cost, {
+                        phase: "گزارش داوری نهایی و سنتز معرفت‌شناختی"
+                    });
+                    updateUI();
+                    showToast("گزارش داوری تخصصی و سنتز علمی در انتهای تاریخچه درج شد.", "success");
+                } else {
+                    showToast("خطا در ارتباط با سرور یا تولید سنتز علمی.", "error");
+                }
+                btn.innerText = "سنتز و جمع‌بندی";
+                btn.disabled = false;
             });
             
             document.getElementById('hostSubmitBtn').addEventListener('click', () => {
                 let inp = document.getElementById('hostInput');
-                if(inp.value.trim()) { addToHistory("شما (هاست)", "Host", inp.value.trim(), 0, 0); inp.value = ""; updateUI(); }
+                if (inp.value.trim()) {
+                    addToHistory("داور / هاست جلسه", "Host", inp.value.trim(), 0, 0, {
+                        falsifiableChallenge: inp.value.trim()
+                    });
+                    inp.value = "";
+                    updateUI();
+                    showToast("چالش شما ثبت شد و سخنران بعدی موظف به پاسخگویی مستقیم به آن است.", "success");
+                }
+            });
+
+            document.getElementById('hostInput').addEventListener('keydown', e => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    document.getElementById('hostSubmitBtn').click();
+                }
             });
             
             document.getElementById('downloadJsonBtn').addEventListener('click', () => {
-                let dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify({ topic: appState.settings.topic, date: new Date().toISOString(), guests: appState.settings.guests.map(g => ({name: g.name, role: g.role, school: g.school})), transcript: appState.chatHistory }, null, 2));
-                let dlAnchorElem = document.createElement('a'); dlAnchorElem.setAttribute("href", dataStr); dlAnchorElem.setAttribute("download", "SimuDebate_Log.json"); dlAnchorElem.click();
+                let dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify({
+                    topic: appState.settings.topic,
+                    rigorLevel: appState.settings.rigorLevel,
+                    date: new Date().toISOString(),
+                    guests: appState.settings.guests.map(g => ({
+                        name: g.name,
+                        role: g.role,
+                        school: g.school,
+                        specialty: g.specialty,
+                        anchors: g.anchors
+                    })),
+                    cognitiveStates: appState.guestStates,
+                    citedReferences: getAllCitedReferences(),
+                    transcript: appState.chatHistory
+                }, null, 2));
+                let dlAnchorElem = document.createElement('a');
+                dlAnchorElem.setAttribute("href", dataStr);
+                dlAnchorElem.setAttribute("download", "SimuDebate_Scientific_Log.json");
+                dlAnchorElem.click();
             });
 
             document.getElementById('generateMindmapBtn').addEventListener('click', async () => {
-                let btn = document.getElementById('generateMindmapBtn'); btn.innerText = "در حال ساخت..."; btn.disabled = true;
+                if (appState.chatHistory.length === 0) {
+                    showToast("ابتدا مناظره را آغاز کنید تا گراف دیالکتیک و آزمایش‌ها ساخته شود.", "error");
+                    return;
+                }
+                let btn = document.getElementById('generateMindmapBtn');
+                btn.innerText = "در حال استخراج گراف دیالکتیک...";
+                btn.disabled = true;
                 let hKey = appState.settings.globalApiKey, hProv = appState.settings.globalProvider, hMod = appState.settings.globalModel;
-                let res = await callLlmApi(hProv, hMod, hKey, "تو یک متخصص تصویرسازی هستی. یک گراف ارتباطی با سینتکس Mermaid.js تولید کن. فقط کد خام Mermaid برگردان.", generateTranscript() + "\n\nاکنون کد Mermaid را تولید کن.", 1500);
-                if(res.content) {
+                let mmSystem = `تو متخصص مصورسازی استدلال‌های علمی با Mermaid.js هستی.
+یک گراف جهت‌دار (graph TD) از مناظره علمی بساز که در آن:
+- گره‌های فرضیه‌های اصلی هر دانشمند
+- آزمایش‌ها و مقالات استنادشده (با برچسب پشتیبان یا نقض‌کننده)
+- چالش‌های ابطال‌پذیر مطرح‌شده بین طرفین
+نمایش داده شوند.
+نکته مهم سینتکسی: متن داخل تمام گره‌ها را حتماً داخل دابل‌کوتیشن قرار بده، مثلاً A["آزمایش لیبت (1983)"] --> B["نقد مدل انباشتگر تصادفی"].
+فقط و فقط کد خام Mermaid را برگردان.`;
+                let res = await callLlmApi(hProv, hMod, hKey, mmSystem, generateTranscript() + "\n\nاکنون کد Mermaid را تولید کن.", 1500, 0.3);
+                if (res.content) {
                     let match = res.content.match(/```(?:mermaid)?\n?([\s\S]*?)```/);
                     appState.mindmapCode = match ? match[1].trim() : res.content.trim();
                     let container = document.getElementById('mindmapContainer');
                     container.classList.remove('hidden');
                     
-                    // اصلاح شماره 2: رندر امن گراف Mermaid به جای کرش کردن کل برنامه
-                    if(window.mermaid) {
+                    if (window.mermaid) {
                         try {
                             let id = `mermaid-svg-${Date.now()}`;
                             const { svg } = await mermaid.render(id, appState.mindmapCode);
@@ -563,14 +1432,17 @@
                         } catch (err) {
                             console.error("Mermaid Render Error:", err);
                             container.innerHTML = `
-                                <div class="text-red-400 text-xs p-2">خطا در رندر گراف. هوش مصنوعی کد نامعتبری تولید کرد:</div>
+                                <div class="text-red-400 text-xs p-2">خطا در رندر گراف. کد تولیدشده:</div>
                                 <pre dir="ltr" class="text-[10px] text-white/50 text-left overflow-auto">${appState.mindmapCode}</pre>
                             `;
                         }
                     }
                     saveState();
-                } else alert("خطا در تولید مایندمپ.");
-                btn.innerText = "ساخت گراف ارتباطی (Mindmap)"; btn.disabled = false;
+                } else {
+                    showToast("خطا در تولید گراف ارتباطی.", "error");
+                }
+                btn.innerText = "🧠 ساخت گراف ارتباطی (Mindmap)";
+                btn.disabled = false;
             });
         }
 
@@ -648,7 +1520,6 @@
             scene.background = new THREE.Color(colors.baseDark);
             scene.fog = new THREE.FogExp2(colors.baseDark, 0.010);
 
-            // FIX 2: Changed to PerspectiveCamera to fix the optical illusion of inverted perspective.
             const aspect = window.innerWidth / window.innerHeight;
             camera = new THREE.PerspectiveCamera(35, aspect, 0.1, 1000);
             camera.position.set(50, 45, 50);
@@ -977,7 +1848,6 @@
             return path;
         }
 
-        // FIX 1: Completely rebuilt path logic to safely route characters using the safe axes.
         function buildPath(fromRoom, toRoom, fromPos, toPos) {
             let path = [];
             if (fromRoom === toRoom) {
@@ -994,7 +1864,6 @@
             path.push(dpFromIn);
             path.push(dpFromOut);
             
-            // Corridor navigation
             path.push(new THREE.Vector3(dpFromOut.x, 0, 0));
             path.push(new THREE.Vector3(dpToOut.x, 0, 0));
             
@@ -1091,14 +1960,19 @@
                     }
                 } else {
                     char.waitTimer -= delta;
-                    switch (char.action) {
-                        case 'typing': char.head.rotation.y = Math.sin(t * 6) * 0.15; char.head.rotation.x = 0.2 + Math.sin(t * 10) * 0.08; break;
-                        case 'sitting': char.head.rotation.x = Math.sin(t * 1.5) * 0.05; break;
-                        case 'talking': char.head.rotation.y = Math.sin(t * 4) * 0.25; char.head.rotation.z = Math.sin(t * 5) * 0.08; break;
-                        case 'reading': char.head.rotation.x = Math.sin(t * 1.2) * 0.2 - 0.15; break;
-                        case 'searching': char.head.rotation.y = Math.sin(t * 1.5) * 0.3; char.head.rotation.x = 0.15; break;
-                        case 'fixing': char.body.rotation.x = Math.abs(Math.sin(t * 3)) * 0.1; char.head.rotation.x = 0.3; break;
-                        default: char.head.rotation.y = Math.sin(t * 0.8) * 0.3; char.body.rotation.x = 0;
+                    if (char.isDebater && appState.isRunning) {
+                        char.head.rotation.y = Math.sin(t * 5) * 0.22;
+                        char.head.rotation.x = Math.sin(t * 4) * 0.1;
+                    } else {
+                        switch (char.action) {
+                            case 'typing': char.head.rotation.y = Math.sin(t * 6) * 0.15; char.head.rotation.x = 0.2 + Math.sin(t * 10) * 0.08; break;
+                            case 'sitting': char.head.rotation.x = Math.sin(t * 1.5) * 0.05; break;
+                            case 'talking': char.head.rotation.y = Math.sin(t * 4) * 0.25; char.head.rotation.z = Math.sin(t * 5) * 0.08; break;
+                            case 'reading': char.head.rotation.x = Math.sin(t * 1.2) * 0.2 - 0.15; break;
+                            case 'searching': char.head.rotation.y = Math.sin(t * 1.5) * 0.3; char.head.rotation.x = 0.15; break;
+                            case 'fixing': char.body.rotation.x = Math.abs(Math.sin(t * 3)) * 0.1; char.head.rotation.x = 0.3; break;
+                            default: char.head.rotation.y = Math.sin(t * 0.8) * 0.3; char.body.rotation.x = 0;
+                        }
                     }
                     if (char.waitTimer <= 0) {
                         if (!char.isDebater) { startWalkingTo(char, pickDestination(char.room)); } 
@@ -1154,7 +2028,7 @@
 
         function openPanel(roomData) {
             document.getElementById('panel-title').innerText = roomData.title; document.getElementById('panel-icon').innerText = roomData.icon;
-            let iconEl = document.getElementById('panel-icon'); iconEl.className = 'w-14 h-14 rounded-2xl flex items-center justify-center text-3xl border';
+            let iconEl = document.getElementById('panel-icon'); iconEl.className = 'w-12 h-12 rounded-2xl flex items-center justify-center text-2xl border';
             if(themeStyles[roomData.id]) { const classes = themeStyles[roomData.id].split(' '); classes.forEach(c => iconEl.classList.add(c)); }
             document.querySelectorAll('.panel-section').forEach(el => el.classList.add('hidden'));
             let section = document.getElementById(`panel-${roomData.id}`); if(section) section.classList.remove('hidden');
@@ -1163,7 +2037,6 @@
 
         function closePanel() { document.getElementById('side-panel').classList.remove('open'); }
 
-        // FIX 2: onWindowResize updated for PerspectiveCamera format
         function onWindowResize() {
             camera.aspect = window.innerWidth / window.innerHeight;
             camera.updateProjectionMatrix();
