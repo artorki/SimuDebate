@@ -6,56 +6,89 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 
 app = Flask(__name__)
-CORS(app) # اجازه به مرورگر برای اتصال به این سرور (حل مشکل CORS)
+CORS(app)  # اجازه به مرورگر برای اتصال به این سرور (حل مشکل CORS)
 
 PRICING_TABLE = {
+    "gpt-4.1": (0.002, 0.008),
+    "gpt-4o-mini": (0.00015, 0.0006),
     "gpt-4o": (0.005, 0.015),
     "gpt-4-turbo": (0.01, 0.03),
     "gpt-3.5": (0.0005, 0.0015),
+    "o1": (0.015, 0.060),
+    "o3-mini": (0.0011, 0.0044),
+    "claude-sonnet-4": (0.003, 0.015),
+    "claude-3-7-sonnet": (0.003, 0.015),
+    "claude-3-5-sonnet": (0.003, 0.015),
     "claude-3-opus": (0.015, 0.075),
     "claude-3-sonnet": (0.003, 0.015),
-    "claude-3-5-sonnet": (0.003, 0.015),
     "claude-3-haiku": (0.00025, 0.00125),
+    "gemini-2.5-pro": (0.0025, 0.01),
+    "gemini-2.5-flash": (0.00015, 0.0006),
+    "gemini-2.0-flash": (0.0001, 0.0004),
     "gemini-1.5-pro": (0.0035, 0.0105),
     "gemini-1.5-flash": (0.000075, 0.0003),
-    "gemini-2.0-flash": (0.0001, 0.0004)
 }
+
 
 def calculate_cost(model_name, in_tokens, out_tokens):
     in_r, out_r = 0.0, 0.0
-    model_lower = model_name.lower()
-    
+    model_lower = (model_name or "").lower()
+
     if "local" in model_lower or "ollama" in model_lower:
         return 0.0
-        
+
     for k, v in PRICING_TABLE.items():
         if k in model_lower:
             in_r, out_r = v
             break
-            
+
     return (in_tokens / 1000.0) * in_r + (out_tokens / 1000.0) * out_r
+
 
 @app.route('/api/llm', methods=['POST'])
 def api_llm():
-    data = request.json
-    provider = data.get('provider')
-    model = data.get('model')
-    api_key_input = data.get('api_key')
-    system_prompt = data.get('system_prompt')
-    prompt = data.get('prompt')
-    max_tokens = data.get('max_tokens', 2000)
+    data = request.json or {}
+    provider = data.get('provider', 'OpenAI')
+    model = data.get('model', 'gpt-4o')
+    api_key_input = data.get('api_key', '')
+    system_prompt = data.get('system_prompt', '')
+    prompt = data.get('prompt', '')
+    max_tokens = int(data.get('max_tokens', 2500))
+    temperature = float(data.get('temperature', 0.6))
 
-    api_keys = [k.strip() for k in api_key_input.split(",")] if isinstance(api_key_input, str) else api_key_input
-    if not api_keys or api_keys == [""]:
-        return jsonify({"content": None, "tokens": 0, "cost": 0.0})
+    api_keys = (
+        [k.strip() for k in api_key_input.split(",") if k.strip()]
+        if isinstance(api_key_input, str)
+        else (api_key_input or [])
+    )
+
+    if provider == "Local (Ollama/LM Studio)" and not api_keys:
+        api_keys = ["ollama"]
+
+    if not api_keys:
+        return jsonify({
+            "content": None,
+            "tokens": 0,
+            "cost": 0.0,
+            "error": "کلید API وارد نشده است."
+        })
+
+    last_error = None
 
     for current_key in api_keys:
         max_retries = 3
         for attempt in range(max_retries):
             try:
                 if provider == "OpenAI" or provider == "Local (Ollama/LM Studio)":
-                    url = "https://api.openai.com/v1/chat/completions" if provider == "OpenAI" else "http://localhost:11434/v1/chat/completions"
-                    headers = {"Authorization": f"Bearer {current_key}", "Content-Type": "application/json"}
+                    url = (
+                        "https://api.openai.com/v1/chat/completions"
+                        if provider == "OpenAI"
+                        else "http://localhost:11434/v1/chat/completions"
+                    )
+                    headers = {
+                        "Authorization": f"Bearer {current_key}",
+                        "Content-Type": "application/json"
+                    }
                     payload = {
                         "model": model,
                         "messages": [
@@ -63,9 +96,9 @@ def api_llm():
                             {"role": "user", "content": prompt}
                         ],
                         "max_tokens": max_tokens,
-                        "temperature": 0.7
+                        "temperature": temperature
                     }
-                    response = requests.post(url, headers=headers, json=payload, timeout=60)
+                    response = requests.post(url, headers=headers, json=payload, timeout=90)
                     response.raise_for_status()
                     resp_data = response.json()
                     content = resp_data['choices'][0]['message']['content']
@@ -86,9 +119,9 @@ def api_llm():
                         "system": system_prompt,
                         "messages": [{"role": "user", "content": prompt}],
                         "max_tokens": max_tokens,
-                        "temperature": 0.7
+                        "temperature": temperature
                     }
-                    response = requests.post(url, headers=headers, json=payload, timeout=60)
+                    response = requests.post(url, headers=headers, json=payload, timeout=90)
                     response.raise_for_status()
                     resp_data = response.json()
                     content = resp_data['content'][0]['text']
@@ -103,9 +136,12 @@ def api_llm():
                     payload = {
                         "systemInstruction": {"parts": [{"text": system_prompt}]},
                         "contents": [{"role": "user", "parts": [{"text": prompt}]}],
-                        "generationConfig": {"maxOutputTokens": max_tokens, "temperature": 0.7}
+                        "generationConfig": {
+                            "maxOutputTokens": max_tokens,
+                            "temperature": temperature
+                        }
                     }
-                    response = requests.post(url, headers=headers, json=payload, timeout=60)
+                    response = requests.post(url, headers=headers, json=payload, timeout=90)
                     response.raise_for_status()
                     resp_data = response.json()
                     content = resp_data['candidates'][0]['content']['parts'][0]['text']
@@ -115,35 +151,38 @@ def api_llm():
                     return jsonify({"content": content, "tokens": in_tok + out_tok, "cost": cost})
 
             except requests.exceptions.HTTPError as e:
-                status_code = e.response.status_code if e.response else None
+                status_code = e.response.status_code if e.response is not None else None
+                last_error = f"HTTP {status_code}"
                 if status_code == 429 and attempt < max_retries - 1:
-                    time.sleep(5) 
+                    time.sleep(5)
                     continue
                 elif status_code in [401, 403, 400]:
-                    break 
+                    break
                 elif status_code in [500, 502, 503, 504] and attempt < max_retries - 1:
                     time.sleep(3)
                     continue
                 break
             except Exception as e:
+                last_error = str(e)
                 print(f"API Request Exception: {e}")
                 if attempt < max_retries - 1:
                     time.sleep(2)
                     continue
                 break
 
-    return jsonify({"content": None, "tokens": 0, "cost": 0.0})
+    return jsonify({"content": None, "tokens": 0, "cost": 0.0, "error": last_error or "API request failed"})
+
 
 @app.route('/api/telegram/send', methods=['POST'])
 def api_tg_send():
-    data = request.json
+    data = request.json or {}
     token = data.get('token')
     chat_id = data.get('chat_id')
     text = data.get('text')
-    
+
     if not token or not chat_id:
         return jsonify({"status": "error"})
-        
+
     url = f"https://api.telegram.org/bot{token}/sendMessage"
     payload = {"chat_id": chat_id, "text": text}
     try:
@@ -153,20 +192,21 @@ def api_tg_send():
         print(f"Telegram Send Error: {e}")
         return jsonify({"status": "error", "message": str(e)})
 
+
 @app.route('/api/telegram/updates', methods=['GET'])
 def api_tg_updates():
     token = request.args.get('token')
     chat_id = request.args.get('chat_id')
     offset = request.args.get('offset', type=int, default=0)
-    
-    if not token or not chat_id: 
+
+    if not token or not chat_id:
         return jsonify({"updates": [], "offset": offset})
-        
+
     url = f"https://api.telegram.org/bot{token}/getUpdates"
     params = {"timeout": 2}
     if offset:
         params["offset"] = offset
-        
+
     updates = []
     try:
         resp = requests.get(url, params=params, timeout=5).json()
@@ -180,8 +220,9 @@ def api_tg_updates():
                     updates.append({"user": user_name, "text": msg["text"]})
     except Exception as e:
         print(f"Telegram Fetch Error: {e}")
-        
+
     return jsonify({"updates": updates, "offset": offset})
+
 
 @app.route('/api/state', methods=['GET', 'POST'])
 def api_state():
@@ -198,6 +239,7 @@ def api_state():
             except Exception as e:
                 print(f"State load error: {e}")
         return jsonify({})
+
 
 if __name__ == '__main__':
     print("SimuDebate Local Server Running on http://127.0.0.1:8765")
